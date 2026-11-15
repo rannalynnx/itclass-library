@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مكتبة الصف</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--ink:#12302f;--mut:#566b6a;--bg:#f2f6f6;--card:#fff;--brand:#0f4c4a;--brand2:#0b3938;--acc:#e8a33d;--line:#d6e0e0;--bad:#b3261e;--ok:#1b6b3a}
+*{box-sizing:border-box}
+body{margin:0;font-family:Tajawal,"Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;font-size:17px}
+header.top{background:var(--brand);color:#fff;padding:28px 16px 24px;border-bottom:6px solid var(--acc)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+header h1{margin:0;font-size:clamp(28px,6vw,44px);font-weight:800}
+header p{margin:4px 0 0;opacity:.85}
+main{padding:20px 0 40px}
+input,select,textarea,button{font:inherit}
+input[type=search],input[type=text],input[type=email],input[type=password],select,textarea{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+input[type=password],input[type=email]{font-family:Arial,Helvetica,sans-serif;font-size:18px}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+label{display:block;font-weight:700;margin:14px 0 6px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.chip{border:1.5px solid var(--brand);background:#fff;color:var(--brand);padding:8px 16px;border-radius:999px;cursor:pointer;font-weight:700}
+.chip[aria-pressed=true]{background:var(--brand);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.thumb{height:170px;background:#e4ecec;display:flex;align-items:center;justify-content:center;border:0;padding:0;width:100%;cursor:zoom-in}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.ficon{font-weight:800;font-size:30px;color:var(--brand);letter-spacing:1px}
+.body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.body h3{margin:0;font-size:19px}
+.body p{margin:0;color:var(--mut);font-size:15px}
+.meta{display:flex;gap:6px;flex-wrap:wrap;font-size:13px;margin-top:2px}
+.tag{background:#e6efef;border-radius:6px;padding:1px 9px;color:var(--brand2)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:11px 18px;font-weight:700;cursor:pointer;background:var(--brand);color:#fff;text-decoration:none}
+.btn:hover{background:var(--brand2)}
+.btn.acc{background:var(--acc);color:#2a1d00}.btn.ghost{background:#fff;color:var(--brand);border:1.5px solid var(--brand)}.btn.bad{background:var(--bad)}
+.btn:disabled{opacity:.55;cursor:wait}
+.card .btn{margin-top:auto}
+.empty{text-align:center;color:var(--mut);padding:50px 10px;background:#fff;border:1px dashed var(--line);border-radius:14px}
+footer{border-top:1px solid var(--line);padding:18px 16px;text-align:center;font-size:14px;color:var(--mut)}
+footer a{color:var(--mut)}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px}
+.panel h2{margin:0 0 4px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.bar{height:12px;background:#e4ecec;border-radius:6px;overflow:hidden;margin-top:12px}.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .15s}
+#toast{position:fixed;inset-inline:12px;bottom:16px;max-width:520px;margin:auto;padding:14px 18px;border-radius:12px;color:#fff;font-weight:700;display:none;z-index:50;text-align:center}
+#toast.ok{background:var(--ok)}#toast.err{background:var(--bad)}
+.item{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.item .info{flex:1;min-width:200px}.item .info b{display:block}
+.st{font-size:13px;padding:1px 10px;border-radius:6px;font-weight:700}.st.pub{background:#d8efe1;color:var(--ok)}.st.dr{background:#fbe9c8;color:#7a5200}
+dialog{border:0;border-radius:14px;padding:20px;max-width:min(92vw,520px);box-shadow:0 10px 40px #0005}
+dialog::backdrop{background:#000a}
+dialog.lb{max-width:96vw;padding:10px;background:#111}dialog.lb img{max-width:92vw;max-height:80vh;display:block;margin:auto}
+.note{color:var(--mut);font-size:14px;margin:4px 0 0}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap"><h1>مكتبة الصف</h1><p>دروس وأوراق عمل وعروض وصور، كلها في مكان واحد</p></div></header>
+<main class="wrap" id="app"></main>
+<footer><a href="#/teacher">دخول المعلمة</a></footer>
+<div id="toast" role="status" aria-live="polite"></div>
+<dialog id="lb" class="lb"><img id="lbimg" alt=""><div class="row" style="justify-content:center;margin-top:8px"><a class="btn acc" id="lbdl">تنزيل الملف</a><button class="btn ghost" onclick="lb.close()">إغلاق</button></div></dialog>
+<dialog id="cf"><h3 style="margin-top:0">تأكيد الحذف</h3><p id="cft"></p><div class="row"><button class="btn bad" id="cfy">نعم، احذفي الملف</button><button class="btn ghost" id="cfn">إلغاء</button></div></dialog>
+
+<script>
+/* ===== الإعدادات: ضعي هنا بيانات مشروع Supabase (انظري دليل الإعداد) ===== */
+const SUPABASE_URL = "ضعي_رابط_المشروع_هنا";
+const SUPABASE_ANON_KEY = "ضعي_المفتاح_العام_هنا";
+/* ======================================================================== */
+
+const BUCKET = "files", MAX = 20 * 1024 * 1024;
+const CATS = { lessons: "الدروس", worksheets: "أوراق العمل", slides: "العروض التقديمية", images: "الصور" };
+const TYPES = { "application/pdf": "PDF", "application/msword": "Word", "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "Word", "application/vnd.ms-powerpoint": "PowerPoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation": "PowerPoint", "image/jpeg": "صورة JPG", "image/png": "صورة PNG", "image/webp": "صورة WebP" };
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const isImg = m => m.startsWith("image/");
+const fmtDate = d => new Date(d).toLocaleDateString("ar", { year: "numeric", month: "long", day: "numeric" });
+const fmtSize = b => b > 1048576 ? (b / 1048576).toFixed(1) + " م.ب" : Math.ceil(b / 1024) + " ك.ب";
+let toastT; function toast(msg, ok = true) { const t = $("#toast"); t.textContent = msg; t.className = ok ? "ok" : "err"; t.style.display = "block"; clearTimeout(toastT); toastT = setTimeout(() => t.style.display = "none", 5000); }
+function confirmDlg(text, yes) { $("#cft").textContent = text; cf.showModal(); $("#cfy").onclick = () => { cf.close(); yes(); }; $("#cfn").onclick = () => cf.close(); }
+
+if (!/^https:\/\//.test(SUPABASE_URL)) { $("#app").innerHTML = '<div class="empty">الموقع غير مُعدّ بعد. افتحي ملف index.html وضعي بيانات المشروع في أعلى قسم الشيفرة، كما في دليل الإعداد.</div>'; throw new Error("not configured"); }
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function signedUrls(rows, download) {
+  const out = {};
+  await Promise.all(rows.map(async r => {
+    const { data } = await sb.storage.from(BUCKET).createSignedUrl(r.file_path, 3600, download ? { download: r.file_name } : undefined);
+    if (data) out[r.id] = data.signedUrl;
+  }));
+  return out;
+}
+
+/* ===== صفحة الطلاب ===== */
+let all = [], filt = "all", q = "";
+async function publicPage() {
+  $("#app").innerHTML = `<label for="q" style="margin-top:0">ابحثي عن ملف أو درس</label>
+  <input id="q" type="search" placeholder="اكتبي كلمة من العنوان أو الوصف">
+  <div class="chips" role="group" aria-label="التصنيفات">${[["all", "الكل"], ["lessons", "الدروس"], ["worksheets", "أوراق العمل"], ["slides", "العروض التقديمية"], ["images", "الصور"]].map(([k, v]) => `<button class="chip" data-k="${k}" aria-pressed="${k === filt}">${v}</button>`).join("")}</div>
+  <div id="list" class="grid"><div class="empty">جارٍ التحميل…</div></div>`;
+  $("#q").oninput = e => { q = e.target.value.trim(); draw(); };
+  document.querySelectorAll(".chip").forEach(c => c.onclick = () => { filt = c.dataset.k; document.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === c)); draw(); });
+  const { data, error } = await sb.from("resources").select("*").eq("published", true).order("created_at", { ascending: false });
+  if (error) { $("#list").innerHTML = '<div class="empty">تعذّر تحميل الملفات. تحققي من اتصالك بالإنترنت وأعيدي المحاولة.</div>'; return; }
+  all = data; const [th, dl] = await Promise.all([signedUrls(all.filter(r => isImg(r.mime))), signedUrls(all, true)]);
+  all.forEach(r => { r.thumb = th[r.id]; r.dl = dl[r.id]; }); draw();
+}
+function draw() {
+  const rows = all.filter(r => (filt === "all" || (filt === "images" ? isImg(r.mime) || r.category === "images" : r.category === filt)) && (!q || (r.title + " " + (r.description || "")).includes(q)));
+  $("#list").innerHTML = rows.length ? rows.map(r => `<article class="card">
+    ${isImg(r.mime) && r.thumb ? `<button class="thumb" data-id="${r.id}" aria-label="تكبير الصورة: ${esc(r.title)}"><img src="${r.thumb}" alt="${esc(r.title)}" loading="lazy"></button>` : `<div class="thumb" style="cursor:default"><span class="ficon">${r.mime.includes("pdf") ? "PDF" : r.mime.includes("word") ? "DOC" : "PPT"}</span></div>`}
+    <div class="body"><h3>${esc(r.title)}</h3>${r.description ? `<p>${esc(r.description)}</p>` : ""}
+    <div class="meta"><span class="tag">${CATS[r.category]}</span><span class="tag">${TYPES[r.mime]}</span><span class="tag">${fmtDate(r.created_at)}</span><span class="tag">${fmtSize(r.size_bytes)}</span></div>
+    <a class="btn" href="${r.dl || "#"}" download="${esc(r.file_name)}">تنزيل الملف</a></div></article>`).join("") : `<div class="empty" style="grid-column:1/-1">${all.length ? "لا توجد نتائج مطابقة لبحثك." : "لم يُنشر أي ملف بعد."}</div>`;
+  document.querySelectorAll(".thumb[data-id]").forEach(b => b.onclick = () => { const r = all.find(x => x.id === b.dataset.id); lbimg.src = r.thumb; lbimg.alt = r.title; lbdl.href = r.dl; lbdl.setAttribute("download", r.file_name); lb.showModal(); });
+}
+
+/* ===== دخول المعلمة ===== */
+function loginPage() {
+  $("#app").innerHTML = `<div class="panel" style="max-width:440px;margin:20px auto"><h2>دخول المعلمة</h2><p class="note">هذه الصفحة خاصة بالمعلمة فقط.</p>
+  <label for="em">البريد الإلكتروني</label><input id="em" type="email" autocomplete="username" dir="ltr">
+  <label for="pw">كلمة المرور</label><input id="pw" type="password" autocomplete="current-password" dir="ltr">
+  <label style="font-weight:500;display:flex;gap:8px;align-items:center;margin:8px 0 0"><input id="sh" type="checkbox"> إظهار كلمة المرور</label>
+  <div class="row" style="margin-top:16px"><button class="btn" id="go">تسجيل الدخول</button><a class="btn ghost" href="#/">العودة إلى المكتبة</a></div></div>`;
+  const go = async () => { const b = $("#go"); b.disabled = true;
+    const { error } = await sb.auth.signInWithPassword({ email: $("#em").value.trim(), password: $("#pw").value });
+    b.disabled = false; if (error) return toast("البريد الإلكتروني أو كلمة المرور غير صحيحة.", false); route(); };
+  $("#sh").onchange = e => $("#pw").type = e.target.checked ? "text" : "password"; $("#go").onclick = go; $("#pw").onkeydown = e => e.key === "Enter" && go();
+}
+
+/* ===== لوحة تحكم المعلمة ===== */
+let editing = null;
+async function dashboard() {
+  $("#app").innerHTML = `<div class="row" style="justify-content:space-between;margin-bottom:14px"><h2 style="margin:0">لوحة تحكم المعلمة</h2><div class="row"><a class="btn ghost" href="#/">عرض صفحة الطلاب</a><button class="btn ghost" id="out">تسجيل الخروج</button></div></div>
+  <div class="panel"><h2 id="ft">إضافة ملف</h2><p class="note" id="fn">الأنواع المقبولة: PDF وWord وPowerPoint وJPG وPNG وWebP. الحد الأقصى ${fmtSize(MAX)}.</p>
+  <label for="t">عنوان الملف</label><input id="t" type="text" maxlength="150">
+  <label for="d">الوصف (اختياري)</label><textarea id="d" rows="3" maxlength="1000"></textarea>
+  <label for="c">التصنيف</label><select id="c">${Object.entries(CATS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select>
+  <label for="f" id="fl">الملف</label><input id="f" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.webp">
+  <div class="bar hide" id="bar"><i></i></div><p class="note hide" id="pct"></p>
+  <div class="row" style="margin-top:16px"><button class="btn ghost" id="sd">حفظ كمسودة</button><button class="btn acc" id="sp">نشر الآن</button><button class="btn ghost hide" id="cx">إلغاء التعديل</button></div></div>
+  <div class="panel"><h2>ملفاتي</h2><div id="mine">جارٍ التحميل…</div></div>`;
+  $("#out").onclick = async () => { await sb.auth.signOut(); location.hash = "#/"; route(); };
+  $("#sd").onclick = () => save(false); $("#sp").onclick = () => save(true); $("#cx").onclick = () => { editing = null; dashboard(); };
+  if (editing) { $("#ft").textContent = "تعديل الملف"; $("#t").value = editing.title; $("#d").value = editing.description || ""; $("#c").value = editing.category; $("#fl").textContent = "استبدال الملف (اتركيه فارغاً للإبقاء على الملف الحالي)"; $("#cx").classList.remove("hide"); }
+  list();
+}
+function validate(file) {
+  if (!file.type || !TYPES[file.type]) return "نوع الملف غير مدعوم. ارفعي PDF أو Word أو PowerPoint أو صورة JPG أو PNG أو WebP.";
+  if (file.size > MAX) return "حجم الملف يتجاوز الحد المسموح به (" + fmtSize(MAX) + ").";
+}
+function upload(path, file) {
+  return new Promise(async (res, rej) => {
+    const { data: { session } } = await sb.auth.getSession(); if (!session) return rej(new Error("auth"));
+    const x = new XMLHttpRequest(); x.open("POST", `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`);
+    x.setRequestHeader("Authorization", "Bearer " + session.access_token); x.setRequestHeader("apikey", SUPABASE_ANON_KEY);
+    x.setRequestHeader("Content-Type", file.type); x.setRequestHeader("x-upsert", "false");
+    $("#bar").classList.remove("hide"); $("#pct").classList.remove("hide");
+    x.upload.onprogress = e => { if (e.lengthComputable) { const p = Math.round(e.loaded / e.total * 100); $("#bar i").style.width = p + "%"; $("#pct").textContent = "جارٍ الرفع… " + p + "%"; } };
+    x.onload = () => x.status < 300 ? res() : rej(new Error("up" + x.status)); x.onerror = () => rej(new Error("net")); x.send(file);
+  });
+}
+async function save(publish) {
+  const title = $("#t").value.trim(), file = $("#f").files[0];
+  if (!title) return toast("يرجى كتابة عنوان الملف.", false);
+  if (!editing && !file) return toast("يرجى اختيار ملف للرفع.", false);
+  if (file) { const v = validate(file); if (v) return toast(v, false); }
+  $("#sd").disabled = $("#sp").disabled = true;
+  try {
+    const row = { title, description: $("#d").value.trim() || null, category: $("#c").value, published: publish, updated_at: new Date().toISOString() };
+    let oldPath = null;
+    if (file) {
+      const ext = file.name.split(".").pop().toLowerCase().replace(/[^a-z0-9]/g, "");
+      const path = crypto.randomUUID() + "." + ext; await upload(path, file);
+      Object.assign(row, { file_path: path, file_name: file.name, mime: file.type, size_bytes: file.size });
+      if (editing) oldPath = editing.file_path;
+    }
+    const q = editing ? sb.from("resources").update(row).eq("id", editing.id) : sb.from("resources").insert(row);
+    const { error } = await q; if (error) throw error;
+    if (oldPath) await sb.storage.from(BUCKET).remove([oldPath]);
+    const was = editing; editing = null; await dashboard();
+    toast(was ? "تم حفظ التعديلات بنجاح" : publish ? "تم نشر الملف بنجاح" : "تم حفظ الملف كمسودة");
+  } catch (e) {
+    $("#sd").disabled = $("#sp").disabled = false;
+    toast(e.message === "up413" ? "حجم الملف يتجاوز الحد المسموح به." : e.message === "net" ? "انقطع الاتصال أثناء الرفع. أعيدي المحاولة." : "تعذّر حفظ الملف. تأكدي من تسجيل الدخول وأعيدي المحاولة.", false);
+  }
+}
+async function list() {
+  const { data, error } = await sb.from("resources").select("*").order("created_at", { ascending: false });
+  if (error) { $("#mine").textContent = "تعذّر تحميل الملفات. قد لا يكون حسابك مرتبطاً بصلاحية المعلمة؛ راجعي دليل الإعداد."; return; }
+  $("#mine").innerHTML = data.length ? "" : '<div class="empty">لم تضيفي أي ملف بعد.</div>';
+  data.forEach(r => {
+    const el = document.createElement("div"); el.className = "item";
+    el.innerHTML = `<div class="info"><b>${esc(r.title)}</b><span class="note">${CATS[r.category]} · ${TYPES[r.mime]} · ${fmtDate(r.created_at)}</span></div>
+    <span class="st ${r.published ? "pub" : "dr"}">${r.published ? "منشور" : "مسودة"}</span>
+    <button class="btn ghost" data-a="edit">تعديل</button><button class="btn ghost" data-a="tog">${r.published ? "إلغاء النشر" : "نشر"}</button><button class="btn bad" data-a="del">حذف</button>`;
+    el.querySelector('[data-a=edit]').onclick = () => { editing = r; dashboard(); scrollTo(0, 0); };
+    el.querySelector('[data-a=tog]').onclick = async () => { const { error } = await sb.from("resources").update({ published: !r.published, updated_at: new Date().toISOString() }).eq("id", r.id); error ? toast("تعذّر تغيير حالة النشر.", false) : (toast(r.published ? "تم إلغاء نشر الملف" : "تم نشر الملف بنجاح"), list()); };
+    el.querySelector('[data-a=del]').onclick = () => confirmDlg(`هل تريدين حذف «${r.title}» نهائياً؟ لا يمكن التراجع عن ذلك.`, async () => {
+      await sb.storage.from(BUCKET).remove([r.file_path]); const { error } = await sb.from("resources").delete().eq("id", r.id);
+      error ? toast("تعذّر حذف الملف.", false) : (toast("تم حذف الملف"), list()); });
+    $("#mine").appendChild(el);
+  });
+}
+
+async function route() {
+  if (location.hash.startsWith("#/teacher")) { const { data: { session } } = await sb.auth.getSession(); session ? dashboard() : loginPage(); }
+  else publicPage();
+}
+addEventListener("hashchange", route); route();
+</script>
+</body>
+</html>
