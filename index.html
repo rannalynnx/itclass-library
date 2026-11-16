@@ -129,7 +129,7 @@ function loginPage() {
   const go = async () => { const b = $("#go"); b.disabled = true; try {
     const { error } = await sb.auth.signInWithPassword({ email: $("#em").value.trim(), password: $("#pw").value });
     b.disabled = false; if (error) return toast((/invalid login/i.test(error.message) ? "البريد الإلكتروني أو كلمة المرور غير صحيحة." : "تعذّر تسجيل الدخول.") + " [" + error.message + "]", false); location.hash = "#/teacher"; route(); } catch (e) { b.disabled = false; toast("تعذّر الاتصال بالخادم. تحققي من رابط المشروع والمفتاح. [" + e.message + "]", false); } };
-  $("#sh").onchange = e => $("#pw").type = e.target.checked ? "text" : "password"; $("#go").onclick = go; $("#pw").onkeydown = e => e.key === "Enter" && go();
+  $("#sh").onchange = e => $("#pw").type = e.target.checked ? "text" : "password"; $("#go").onclick = go; $("#pw").onkeydown = e => { if (e.key === "Enter") go(); };
 }
 
 /* ===== لوحة تحكم المعلمة ===== */
