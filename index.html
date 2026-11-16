@@ -8,10 +8,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
-:root{--ink:#12302f;--mut:#566b6a;--bg:#f2f6f6;--card:#fff;--brand:#0f4c4a;--brand2:#0b3938;--acc:#e8a33d;--line:#d6e0e0;--bad:#b3261e;--ok:#1b6b3a}
+:root{--ink:#3b2a4d;--mut:#6d5c7e;--bg:#fcf5fa;--card:#fff;--brand:#5b3f78;--brand2:#44305a;--acc:#F9E1A8;--line:#e6d9ef;--bad:#8a1f4a;--ok:#5b3f78}
 *{box-sizing:border-box}
 body{margin:0;font-family:Tajawal,"Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;font-size:17px}
-header.top{background:var(--brand);color:#fff;padding:28px 16px 24px;border-bottom:6px solid var(--acc)}
+header.top{background:#FFCBE1;color:var(--ink);padding:28px 16px 24px;border-bottom:6px solid var(--acc)}
 .wrap{max-width:1040px;margin:0 auto;padding:0 16px}
 header h1{margin:0;font-size:clamp(28px,6vw,44px);font-weight:800}
 header p{margin:4px 0 0;opacity:.85}
@@ -23,20 +23,20 @@ input[type=password],input[type=email],#pw{font-family:Arial,Helvetica,sans-seri
 label{display:block;font-weight:700;margin:14px 0 6px}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
 .chip{border:1.5px solid var(--brand);background:#fff;color:var(--brand);padding:8px 16px;border-radius:999px;cursor:pointer;font-weight:700}
-.chip[aria-pressed=true]{background:var(--brand);color:#fff}
+.chip[aria-pressed=true]{background:#FFCBE1;color:var(--ink);border-color:var(--brand)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
-.thumb{height:170px;background:#e4ecec;display:flex;align-items:center;justify-content:center;border:0;padding:0;width:100%;cursor:zoom-in}
+.thumb{height:170px;background:#f3eafa;display:flex;align-items:center;justify-content:center;border:0;padding:0;width:100%;cursor:zoom-in}
 .thumb img{width:100%;height:100%;object-fit:cover}
 .ficon{font-weight:800;font-size:30px;color:var(--brand);letter-spacing:1px}
 .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
 .body h3{margin:0;font-size:19px}
 .body p{margin:0;color:var(--mut);font-size:15px}
 .meta{display:flex;gap:6px;flex-wrap:wrap;font-size:13px;margin-top:2px}
-.tag{background:#e6efef;border-radius:6px;padding:1px 9px;color:var(--brand2)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:11px 18px;font-weight:700;cursor:pointer;background:var(--brand);color:#fff;text-decoration:none}
-.btn:hover{background:var(--brand2)}
-.btn.acc{background:var(--acc);color:#2a1d00}.btn.ghost{background:#fff;color:var(--brand);border:1.5px solid var(--brand)}.btn.bad{background:var(--bad)}
+.tag{background:#DCCCEC;border-radius:6px;padding:1px 9px;color:var(--ink)}.tag:nth-child(1){background:#FFCBE1}.tag:nth-child(3){background:#F9E1A8}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:11px 18px;font-weight:700;cursor:pointer;background:#DCCCEC;color:var(--ink);text-decoration:none}
+.btn:hover{background:#cbb6e4}
+.btn.acc{background:var(--acc);color:var(--ink)}.btn.acc:hover{background:#f3d58a}.btn.ghost{background:#fff;color:var(--brand);border:1.5px solid var(--brand)}.btn.bad{background:#FFCBE1;color:var(--bad)}.btn.bad:hover{background:#ffb5d3}.btn.ghost:hover{background:#f6effb}
 .btn:disabled{opacity:.55;cursor:wait}
 .card .btn{margin-top:auto}
 .empty{text-align:center;color:var(--mut);padding:50px 10px;background:#fff;border:1px dashed var(--line);border-radius:14px}
@@ -45,15 +45,15 @@ footer a{color:var(--mut)}
 .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px}
 .panel h2{margin:0 0 4px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.bar{height:12px;background:#e4ecec;border-radius:6px;overflow:hidden;margin-top:12px}.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .15s}
+.bar{height:12px;background:#f3eafa;border-radius:6px;overflow:hidden;margin-top:12px}.bar i{display:block;height:100%;width:0;background:#b79ad6;transition:width .15s}
 #toast{position:fixed;inset-inline:12px;bottom:16px;max-width:520px;margin:auto;padding:14px 18px;border-radius:12px;color:#fff;font-weight:700;display:none;z-index:50;text-align:center}
 #toast.ok{background:var(--ok)}#toast.err{background:var(--bad)}
 .item{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line);flex-wrap:wrap}
 .item .info{flex:1;min-width:200px}.item .info b{display:block}
-.st{font-size:13px;padding:1px 10px;border-radius:6px;font-weight:700}.st.pub{background:#d8efe1;color:var(--ok)}.st.dr{background:#fbe9c8;color:#7a5200}
+.st{font-size:13px;padding:1px 10px;border-radius:6px;font-weight:700}.st.pub{background:#DCCCEC;color:var(--ink)}.st.dr{background:#F9E1A8;color:var(--ink)}
 dialog{border:0;border-radius:14px;padding:20px;max-width:min(92vw,520px);box-shadow:0 10px 40px #0005}
 dialog::backdrop{background:#000a}
-dialog.lb{max-width:96vw;padding:10px;background:#111}dialog.lb img{max-width:92vw;max-height:80vh;display:block;margin:auto}
+dialog.lb{max-width:96vw;padding:10px;background:#2a1d38}dialog.lb img{max-width:92vw;max-height:80vh;display:block;margin:auto}
 .note{color:var(--mut);font-size:14px;margin:4px 0 0}
 .hide{display:none!important}
 </style>
@@ -114,22 +114,28 @@ function draw() {
   $("#list").innerHTML = rows.length ? rows.map(r => `<article class="card">
     ${isImg(r.mime) && r.thumb ? `<button class="thumb" data-id="${r.id}" aria-label="تكبير الصورة: ${esc(r.title)}"><img src="${r.thumb}" alt="${esc(r.title)}" loading="lazy"></button>` : `<div class="thumb" style="cursor:default"><span class="ficon">${r.mime.includes("pdf") ? "PDF" : r.mime.includes("word") ? "DOC" : "PPT"}</span></div>`}
     <div class="body"><h3>${esc(r.title)}</h3>${r.description ? `<p>${esc(r.description)}</p>` : ""}
-    <div class="meta"><span class="tag">${CATS[r.category]}</span><span class="tag">${TYPES[r.mime]}</span><span class="tag">${fmtDate(r.created_at)}</span><span class="tag">${fmtSize(r.size_bytes)}</span></div>
+    <div class="meta"><span class="tag">${CATS[r.category]}</span><span class="tag">${TYPES[r.mime]}</span><span class="tag">${fmtDate(r.created_at)}</span></div>
     <a class="btn" href="${r.dl || "#"}" download="${esc(r.file_name)}">تنزيل الملف</a></div></article>`).join("") : `<div class="empty" style="grid-column:1/-1">${all.length ? "لا توجد نتائج مطابقة لبحثك." : "لم يُنشر أي ملف بعد."}</div>`;
   document.querySelectorAll(".thumb[data-id]").forEach(b => b.onclick = () => { const r = all.find(x => x.id === b.dataset.id); lbimg.src = r.thumb; lbimg.alt = r.title; lbdl.href = r.dl; lbdl.setAttribute("download", r.file_name); lb.showModal(); });
 }
 
 /* ===== دخول المعلمة ===== */
 function loginPage() {
-  $("#app").innerHTML = `<div class="panel" style="max-width:440px;margin:20px auto"><h2>دخول المعلمة</h2><p class="note">هذه الصفحة خاصة بالمعلمة فقط.</p>
+  $("#app").innerHTML = `<div class="panel" style="max-width:440px;margin:20px auto"><h2>دخول المعلمة</h2><p class="note">هذه الصفحة خاصة بالمعلمة فقط. (إصدار 4)</p>
+  <form id="lf" novalidate>
   <label for="em">البريد الإلكتروني</label><input id="em" type="email" autocomplete="username" dir="ltr">
   <label for="pw">كلمة المرور</label><input id="pw" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" dir="ltr" inputmode="text">
   <label style="font-weight:500;display:flex;gap:8px;align-items:center;margin:8px 0 0"><input id="sh" type="checkbox" checked> إظهار كلمة المرور</label>
-  <div class="row" style="margin-top:16px"><button class="btn" id="go">تسجيل الدخول</button><a class="btn ghost" href="#/">العودة إلى المكتبة</a></div></div>`;
+  <div class="row" style="margin-top:16px"><button class="btn" id="go" type="submit">تسجيل الدخول</button><a class="btn ghost" href="#/">العودة إلى المكتبة</a></div></form>
+  <hr style="border:0;border-top:1px solid var(--line);margin:20px 0"><p class="note">إن تعذّرت كتابة كلمة المرور، اكتبي بريدك في الحقل الأول ثم اضغطي الزر التالي لتصلك رسالة برابط دخول مباشر.</p><button class="btn ghost" id="ml" type="button" style="margin-top:8px">إرسال رابط دخول إلى بريدي</button></div>`;
   const go = async () => { const b = $("#go"); b.disabled = true; try {
     const { error } = await sb.auth.signInWithPassword({ email: $("#em").value.trim(), password: $("#pw").value });
     b.disabled = false; if (error) return toast((/invalid login/i.test(error.message) ? "البريد الإلكتروني أو كلمة المرور غير صحيحة." : "تعذّر تسجيل الدخول.") + " [" + error.message + "]", false); location.hash = "#/teacher"; route(); } catch (e) { b.disabled = false; toast("تعذّر الاتصال بالخادم. تحققي من رابط المشروع والمفتاح. [" + e.message + "]", false); } };
-  $("#sh").onchange = e => $("#pw").type = e.target.checked ? "text" : "password"; $("#go").onclick = go; $("#pw").onkeydown = e => { if (e.key === "Enter") go(); };
+  $("#sh").onchange = e => { $("#pw").type = e.target.checked ? "text" : "password"; };
+  $("#lf").onsubmit = e => { e.preventDefault(); go(); };
+  $("#ml").onclick = async () => { const em = $("#em").value.trim(); if (!em) return toast("اكتبي بريدك الإلكتروني أولاً.", false);
+    const { error } = await sb.auth.signInWithOtp({ email: em, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } });
+    error ? toast("تعذّر إرسال الرابط. [" + error.message + "]", false) : toast("تم إرسال رابط الدخول. افتحي بريدك واضغطي على الرابط."); };
 }
 
 /* ===== لوحة تحكم المعلمة ===== */
@@ -211,7 +217,8 @@ async function route() {
   if (location.hash.startsWith("#/teacher")) { const { data: { session } } = await sb.auth.getSession(); session ? dashboard() : loginPage(); }
   else publicPage();
 }
-addEventListener("hashchange", route); route();
+addEventListener("hashchange", route);
+if (location.hash.includes("access_token")) sb.auth.getSession().then(() => { location.hash = "#/teacher"; }); else route();
 </script>
 </body>
 </html>
