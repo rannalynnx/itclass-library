@@ -25,6 +25,7 @@ input[type=password],input[type=email],#pw{font-family:Arial,Helvetica,sans-seri
 label{display:block;font-weight:700;margin:14px 0 6px}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
 .chip{border:1.5px solid var(--brand);background:#fff;color:var(--brand);padding:8px 16px;border-radius:999px;cursor:pointer;font-weight:700}
+a.chip{text-decoration:none;display:inline-block}
 .chip[aria-pressed=true]{background:#FFCBE1;color:var(--ink);border-color:var(--brand)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
@@ -189,19 +190,27 @@ function loginPage() {
 }
 
 /* ===== لوحة تحكم المعلمة ===== */
-let editing = null;
+let editing = null, tab = "lessons";
 async function dashboard() {
+  const seg = location.hash.split("/")[2]; tab = CATS[seg] ? seg : "lessons";
+  if (editing && editing.category !== tab) editing = null;
   $("#app").innerHTML = `<div class="row" style="justify-content:space-between;margin-bottom:14px"><h2 style="margin:0">لوحة تحكم المعلمة</h2></div>
-  <div class="panel"><h2 id="ft">إضافة ملف</h2><p class="note" id="fn">الأنواع المقبولة: PDF وWord وPowerPoint وJPG وPNG وWebP. الحد الأقصى ${fmtSize(MAX)}.</p>
+  <nav class="chips" id="tabs" aria-label="أقسام الملفات">${Object.entries(CATS).map(([k, v]) => `<a class="chip" id="tab-${k}" href="#/teacher/${k}" aria-pressed="${k === tab}">${v}</a>`).join("")}</nav>
+  ${tab === "projects" ? `<div class="row" style="margin-bottom:14px"><button class="btn acc" id="addbtn" type="button">إضافة ملف</button></div>` : ""}
+  <div class="panel" id="fp"><h2 id="ft">إضافة ملف إلى «${CATS[tab]}»</h2><p class="note" id="fn">الأنواع المقبولة: PDF وWord وPowerPoint وJPG وPNG وWebP. الحد الأقصى ${fmtSize(MAX)}.</p>
   <label for="t">عنوان الملف</label><input id="t" type="text" maxlength="150">
   <label for="d">الوصف (اختياري)</label><textarea id="d" rows="3" maxlength="1000"></textarea>
   <label for="c">التصنيف</label><select id="c">${Object.entries(CATS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select>
   <label for="f" id="fl">الملف</label><input id="f" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.webp">
   <div class="bar hide" id="bar"><i></i></div><p class="note hide" id="pct"></p>
   <div class="row" style="margin-top:16px"><button class="btn ghost" id="sd">حفظ كمسودة</button><button class="btn acc" id="sp">نشر الآن</button><button class="btn ghost hide" id="cx">إلغاء التعديل</button></div></div>
-  <div class="panel"><h2>ملفاتي</h2><div id="mine">جارٍ التحميل…</div></div>`;
+  <div class="panel"><h2>ملفات «${CATS[tab]}»</h2><div id="mine">جارٍ التحميل…</div></div>`;
   
   $("#sd").onclick = () => save(false); $("#sp").onclick = () => save(true); $("#cx").onclick = () => { editing = null; dashboard(); };
+  $("#c").value = tab;
+  if (tab === "projects" && !editing) $("#fp").classList.add("hide");
+  if ($("#addbtn")) $("#addbtn").onclick = () => { $("#fp").classList.remove("hide"); $("#addbtn").classList.add("hide"); $("#t").focus(); };
+  if ($("#addbtn") && editing) $("#addbtn").classList.add("hide");
   if (editing) { $("#ft").textContent = "تعديل الملف"; $("#t").value = editing.title; $("#d").value = editing.description || ""; $("#c").value = editing.category; $("#fl").textContent = "استبدال الملف (اتركيه فارغاً للإبقاء على الملف الحالي)"; $("#cx").classList.remove("hide"); }
   list();
 }
@@ -241,7 +250,7 @@ async function save(publish) {
     const q = editing ? sb.from("resources").update(row).eq("id", editing.id) : sb.from("resources").insert(row);
     const { error } = await q; if (error) throw error;
     if (oldPath) await sb.storage.from(BUCKET).remove([oldPath]);
-    const was = editing; editing = null; await dashboard();
+    const was = editing; editing = null; if (row.category !== tab) location.hash = "#/teacher/" + row.category; else await dashboard();
     toast(was ? "تم حفظ التعديلات بنجاح" : publish ? "تم نشر الملف بنجاح" : "تم حفظ الملف كمسودة");
   } catch (e) {
     $("#sd").disabled = $("#sp").disabled = false;
@@ -251,8 +260,11 @@ async function save(publish) {
 async function list() {
   const { data, error } = await sb.from("resources").select("*").order("created_at", { ascending: false });
   if (error) { $("#mine").textContent = "تعذّر تحميل الملفات. قد لا يكون حسابك مرتبطاً بصلاحية المعلمة؛ راجعي دليل الإعداد."; return; }
-  $("#mine").innerHTML = data.length ? "" : '<div class="empty">لم تضيفي أي ملف بعد.</div>';
-  data.forEach(r => {
+  Object.entries(CATS).forEach(([k, v]) => { const n = data.filter(x => x.category === k).length, pend = data.filter(x => x.category === k && !x.published && x.student_name).length, a = $("#tab-" + k);
+    if (a) a.textContent = v + " (" + n + ")" + (pend ? " · " + pend + " بانتظار المراجعة" : ""); });
+  const rows = data.filter(x => x.category === tab);
+  $("#mine").innerHTML = rows.length ? "" : `<div class="empty">لا توجد ملفات في قسم «${CATS[tab]}» بعد.</div>`;
+  rows.forEach(r => {
     const el = document.createElement("div"); el.className = "item";
     el.innerHTML = `<div class="info"><b>${esc(r.title)}</b><span class="note">${CATS[r.category] || r.category} · ${TYPES[r.mime]} · ${fmtDate(r.created_at)}</span>${r.student_name ? `<span class="note">الطالبة: ${esc(r.student_name)} · الشعبة: ${esc(r.section || "")} · الرقم الأكاديمي: ${esc(r.academic_no || "")}</span>` : ""}</div>
     <span class="st ${r.published ? "pub" : "dr"}">${r.published ? "منشور" : r.student_name ? "بانتظار المراجعة" : "مسودة"}</span>
