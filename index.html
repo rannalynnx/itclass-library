@@ -110,18 +110,19 @@ async function publicPage() {
   document.querySelectorAll(".chip").forEach(c => c.onclick = () => { filt = c.dataset.k; document.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === c)); draw(); });
   const { data, error } = await sb.from("resources").select("id,title,description,category,file_path,file_name,mime,size_bytes,published,created_at,student_name,section").eq("published", true).order("created_at", { ascending: false });
   if (error) { $("#list").innerHTML = '<div class="empty">تعذّر تحميل الملفات. تحققي من اتصالك بالإنترنت وأعيدي المحاولة.</div>'; return; }
-  all = data; const [th, dl] = await Promise.all([signedUrls(all.filter(r => isImg(r.mime))), signedUrls(all, true)]);
-  all.forEach(r => { r.thumb = th[r.id]; r.dl = dl[r.id]; }); draw();
+  all = data; const isP = r => r.category === "projects";
+  const [th, dl, vw] = await Promise.all([signedUrls(all.filter(r => isImg(r.mime))), signedUrls(all.filter(r => !isP(r)), true), signedUrls(all.filter(isP))]);
+  all.forEach(r => { r.thumb = th[r.id]; r.dl = dl[r.id]; r.view = vw[r.id]; }); draw();
 }
 function draw() {
   if (filt === "projects") { if (!$("#pf")) buildForm(); } else $("#sub").innerHTML = "";
   const rows = all.filter(r => (filt === "all" || (filt === "images" ? isImg(r.mime) || r.category === "images" : r.category === filt)) && (!q || (r.title + " " + (r.description || "")).includes(q)));
   $("#list").innerHTML = rows.length ? rows.map(r => `<article class="card">
     ${isImg(r.mime) && r.thumb ? `<button class="thumb" data-id="${r.id}" aria-label="تكبير الصورة: ${esc(r.title)}"><img src="${r.thumb}" alt="${esc(r.title)}" loading="lazy"></button>` : `<div class="thumb" style="cursor:default"><span class="ficon">${r.mime.includes("pdf") ? "PDF" : r.mime.includes("word") ? "DOC" : "PPT"}</span></div>`}
-    <div class="body"><h3>${esc(r.title)}</h3>${r.description ? `<p>${esc(r.description)}</p>` : ""}${r.student_name ? `<p class="who">الطالبة: ${esc(r.student_name)} · الشعبة: ${esc(r.section || "")}</p>` : ""}
+    <div class="body"><h3>${esc(r.title)}</h3>${r.description ? `<p>${esc(r.description)}</p>` : ""}${r.student_name ? `<p class="who">الطالبة: ${esc(r.student_name)}<br>الشعبة: ${esc(r.section || "")}</p>` : ""}
     <div class="meta"><span class="tag">${CATS[r.category]}</span><span class="tag">${TYPES[r.mime]}</span><span class="tag">${fmtDate(r.created_at)}</span></div>
-    <a class="btn" href="${r.dl || "#"}" download="${esc(r.file_name)}">تنزيل الملف</a></div></article>`).join("") : `<div class="empty" style="grid-column:1/-1">${all.length ? "لا توجد نتائج مطابقة لبحثك." : "لم يُنشر أي ملف بعد."}</div>`;
-  document.querySelectorAll(".thumb[data-id]").forEach(b => b.onclick = () => { const r = all.find(x => x.id === b.dataset.id); lbimg.src = r.thumb; lbimg.alt = r.title; lbdl.href = r.dl; lbdl.setAttribute("download", r.file_name); lb.showModal(); });
+    ${r.category === "projects" ? `<a class="btn" target="_blank" rel="noopener" href="${r.view ? (r.mime === "application/pdf" || isImg(r.mime) ? r.view : "https://view.officeapps.live.com/op/embed.aspx?src=" + encodeURIComponent(r.view)) : "#"}">معاينة المشروع</a>` : `<a class="btn" href="${r.dl || "#"}" download="${esc(r.file_name)}">تنزيل الملف</a>`}</div></article>`).join("") : `<div class="empty" style="grid-column:1/-1">${all.length ? "لا توجد نتائج مطابقة لبحثك." : "لم يُنشر أي ملف بعد."}</div>`;
+  document.querySelectorAll(".thumb[data-id]").forEach(b => b.onclick = () => { const r = all.find(x => x.id === b.dataset.id); lbimg.src = r.thumb; lbimg.alt = r.title; lbdl.classList.toggle("hide", !r.dl); lbdl.href = r.dl || "#"; lbdl.setAttribute("download", r.file_name); lb.showModal(); });
 }
 
 /* ===== رفع مشاريع الطالبات ===== */
