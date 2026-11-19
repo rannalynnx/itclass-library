@@ -39,8 +39,8 @@ a.chip{text-decoration:none;display:inline-block}
 .cc{display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;min-height:150px;border-radius:18px;text-decoration:none;color:var(--ink);font-weight:800;font-size:32px;border:1px solid var(--line);transition:transform .15s}
 .cc small{font-size:15px;font-weight:500}.cc:hover{transform:translateY(-3px)}
 .cc:nth-child(4n+1){background:#FFCBE1}.cc:nth-child(4n+2){background:#DCCCEC}.cc:nth-child(4n+3){background:#F9E1A8}.cc:nth-child(4n+4){background:#f0d9f5}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px}
-.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center}.stat b{display:block;font-size:30px;line-height:1.2}.stat span{color:var(--mut);font-size:14px}
+.stats{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:34px 0 4px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 18px;min-width:120px;text-align:center}.stat b{display:block;font-size:20px;line-height:1.3}.stat span{font-size:13px}
 .stat:nth-child(1){background:#FFCBE1}.stat:nth-child(2){background:#DCCCEC}.stat:nth-child(3){background:#F9E1A8}.stat:nth-child(4){background:#f0d9f5}.stat span{color:var(--ink)}
 .cc.mini{min-height:84px;font-size:22px;flex-direction:row;gap:14px;background:#F9E1A8!important}
 h3 a{text-decoration:none}
@@ -103,6 +103,7 @@ const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const isImg = m => !!m && m.startsWith("image/");
 const fmtDate = d => new Date(d).toLocaleDateString("ar", { year: "numeric", month: "long", day: "numeric" });
+const fmtSize = b => b > 1048576 ? (b / 1048576).toFixed(1) + " م.ب" : Math.ceil(b / 1024) + " ك.ب";
 const latin = v => String(v).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
 const termLabel = r => r.year ? r.term + " " + r.year : "غير محدد";
 let toastT; function toast(msg, ok = true) { const t = $("#toast"); t.textContent = msg; t.className = ok ? "ok" : "err"; t.style.display = "block"; clearTimeout(toastT); toastT = setTimeout(() => t.style.display = "none", 6000); }
@@ -118,6 +119,7 @@ async function sign(path, dl, name) { const { data } = await sb.storage.from(BUC
 async function thumbs(rows) { const out = {}; await Promise.all(rows.filter(r => isImg(r.mime) && r.file_path).map(async r => { out[r.id] = await sign(r.file_path); })); return out; }
 const REG = {};
 async function act(r) {
+  r.downloads = (r.downloads || 0) + 1; document.querySelectorAll(`[data-c="${r.id}"]`).forEach(el => el.textContent = ((r.link_url && !r.file_path) || r.category === "projects" || r.category === "practice" ? "عدد مرات الفتح" : "عدد مرات التنزيل") + ": " + r.downloads);
   sb.rpc("bump_resource", { rid: r.id }).then(() => {}, () => {});
   if (r.link_url && !r.file_path) { window.open(r.link_url, "_blank", "noopener,noreferrer"); return; }
   if (r.category === "projects" || r.category === "practice") {
@@ -140,7 +142,7 @@ function card(r) {
   const stars = r.rating ? `<p class="stars" aria-label="التقييم ${r.rating} من 5">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</p>` : "";
   return `<article class="card">${top}<div class="body"><h3>${esc(r.title)}</h3>${r.description ? `<p>${esc(r.description)}</p>` : ""}${r.student_name ? `<p class="who">الطالبة: ${esc(r.student_name)}<br>الشعبة: ${esc(r.section || "")}</p>` : ""}${stars}
   <div class="meta"><span class="tag">${CATS[r.category]}</span><span class="tag">${lnk ? "رابط" : TYPES[m] || "ملف"}</span><span class="tag">${fmtDate(r.created_at)}</span></div>
-  ${r.downloads ? `<p class="note" style="margin:0">${lnk || prev ? "فُتح" : "نُزّل"} ${r.downloads} مرة</p>` : ""}
+  <p class="note" style="margin:0" data-c="${r.id}">${lnk || prev ? "عدد مرات الفتح" : "عدد مرات التنزيل"}: ${r.downloads || 0}</p>
   <button class="btn" data-a="${r.id}">${label}</button></div></article>`;
 }
 function galleryRows(projects) {
@@ -150,11 +152,11 @@ function galleryRows(projects) {
 
 /* ===== الصفحة الرئيسية ===== */
 async function home() {
-  $("#app").innerHTML = `<div class="stats" id="st"></div>
-  <h2>اختاري المقرر</h2><div class="courses">${Object.entries(COURSES).map(([k, v]) => `<a class="cc" href="#/course/${k}">${v}<small id="n-${k}">&nbsp;</small></a>`).join("")}</div>
+  $("#app").innerHTML = `<h2 style="margin-top:0">اختاري المقرر</h2><div class="courses">${Object.entries(COURSES).map(([k, v]) => `<a class="cc" href="#/course/${k}">${v}<small id="n-${k}">&nbsp;</small></a>`).join("")}</div>
   <div class="row" style="justify-content:space-between;margin:30px 0 4px"><h2 style="margin:0">معرض أعمال الطالبات</h2><a class="btn acc" href="#/gallery">ارفعي عملك</a></div>
-  <p class="note" id="gt"></p><div id="gal"><div class="empty">جارٍ التحميل…</div></div>`;
-  sb.rpc("site_summary").then(({ data: sm }) => { if (!sm || !$("#st")) return; $("#st").innerHTML = [[sm.lessons, "الدروس"], [sm.works, "أعمال الطالبات"], [sm.visits, "الزوار"], [sm.downloads, "مرات التنزيل والفتح"]].map(([n, t]) => `<div class="stat"><b>${Number(n || 0).toLocaleString("en")}</b><span>${t}</span></div>`).join(""); });
+  <p class="note" id="gt"></p><div id="gal"><div class="empty">جارٍ التحميل…</div></div>
+  <div class="stats" id="st"></div>`;
+  sb.rpc("site_summary").then(({ data: sm }) => { if (!sm || !$("#st")) return; $("#st").innerHTML = [[sm.lessons, "الدروس"], [sm.works, "أعمال الطالبات"], [sm.visits, "الزوار"]].map(([n, t]) => `<div class="stat"><b>${Number(n || 0).toLocaleString("en")}</b><span>${t}</span></div>`).join(""); });
   const { data, error } = await sb.from("resources").select(COLS).eq("published", true).order("created_at", { ascending: false });
   if (error) { $("#gal").innerHTML = '<div class="empty">تعذّر تحميل الملفات. تحققي من اتصالك بالإنترنت وأعيدي المحاولة.</div>'; return; }
   Object.keys(COURSES).forEach(k => { const n = data.filter(x => x.course === k && x.category !== "projects").length, el = $("#n-" + k); if (el) el.textContent = n ? n + " ملف" : "لا توجد ملفات بعد"; });
