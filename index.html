@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{--ink:#3b2a4d;--mut:#6d5c7e;--bg:#fcf5fa;--card:#fff;--brand:#5b3f78;--brand2:#44305a;--acc:#F9E1A8;--line:#e6d9ef;--bad:#8a1f4a;--ok:#5b3f78}
 *{box-sizing:border-box}
@@ -38,6 +39,17 @@ a.chip{text-decoration:none;display:inline-block}
 .cc{display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;min-height:150px;border-radius:18px;text-decoration:none;color:var(--ink);font-weight:800;font-size:32px;border:1px solid var(--line);transition:transform .15s}
 .cc small{font-size:15px;font-weight:500}.cc:hover{transform:translateY(-3px)}
 .cc:nth-child(4n+1){background:#FFCBE1}.cc:nth-child(4n+2){background:#DCCCEC}.cc:nth-child(4n+3){background:#F9E1A8}.cc:nth-child(4n+4){background:#f0d9f5}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center}.stat b{display:block;font-size:30px;line-height:1.2}.stat span{color:var(--mut);font-size:14px}
+.stat:nth-child(1){background:#FFCBE1}.stat:nth-child(2){background:#DCCCEC}.stat:nth-child(3){background:#F9E1A8}.stat:nth-child(4){background:#f0d9f5}.stat span{color:var(--ink)}
+.cc.mini{min-height:84px;font-size:22px;flex-direction:row;gap:14px;background:#F9E1A8!important}
+h3 a{text-decoration:none}
+.strip{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x proximity;padding:2px 2px 12px;-webkit-overflow-scrolling:touch}
+.strip .card{flex:0 0 260px;scroll-snap-align:start}
+.stars{color:#c98a00!important;font-size:18px;letter-spacing:2px}
+.drop{border:2px dashed var(--brand);border-radius:14px;padding:30px 14px;text-align:center;cursor:pointer;background:#fbf7fe}.drop.on{background:#FFCBE1}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:15px}th,td{border:1px solid var(--line);padding:8px 10px;text-align:center}th{background:#f3eafa}
+.credits{display:flex;flex-wrap:wrap;gap:6px 22px;justify-content:center;margin-bottom:10px;color:var(--ink);font-size:15px}
 .who{font-weight:700;color:var(--ink)!important}
 .body p{margin:0;color:var(--mut);font-size:15px}
 .meta{display:flex;gap:6px;flex-wrap:wrap;font-size:13px;margin-top:2px}
@@ -69,171 +81,183 @@ dialog.lb{max-width:96vw;padding:10px;background:#2a1d38}dialog.lb img{max-width
 <body>
 <header class="top"><div class="wrap hd"><div class="brand"><img class="logo" src="data:image/webp;base64,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" alt="شعار بوابة تقن التعليمية"><h1>بوابة تقن التعليمية</h1></div><nav id="nav" class="row" aria-label="التنقل"></nav></div><div class="wrap"><p class="lead">تضمّ المكتبة مصادر تعليمية لجميع مقررات «تقن»، إلى جانب معرض لمشاريع الطالبات. يمكنكِ تصفّح مقرّركِ والبحث عن الدرس أو الملف الذي تحتاجين إليه، والاطّلاع على الشروحات والعروض التقديمية والصور المرتبطة بالدروس. كما يمكنكِ تحميل أوراق العمل والملفات التعليمية للمراجعة والتدرّب في الوقت الذي يناسبكِ، دون الحاجة إلى تسجيل الدخول.</p></div></header>
 <main class="wrap" id="app"></main>
-<footer><a href="#/teacher">دخول المعلمة</a></footer>
+<footer><div class="credits"><span>إعداد: أ. مريم الحاي</span><span>إشراف معلم أول: أ. أمينة الصائغ</span><span>مديرة المدرسة: أ. خلود يعقوب بدو</span></div><a href="#/teacher">دخول المعلمة</a></footer>
 <div id="toast" role="status" aria-live="polite"></div>
 <dialog id="lb" class="lb"><img id="lbimg" alt=""><div class="row" style="justify-content:center;margin-top:8px"><a class="btn acc" id="lbdl">تنزيل الملف</a><button class="btn ghost" onclick="lb.close()">إغلاق</button></div></dialog>
 <dialog id="cf"><h3 style="margin-top:0">تأكيد الحذف</h3><p id="cft"></p><div class="row"><button class="btn bad" id="cfy">نعم، احذفي الملف</button><button class="btn ghost" id="cfn">إلغاء</button></div></dialog>
 
 <script>
-/* ===== الإعدادات: ضعي هنا بيانات مشروع Supabase (انظري دليل الإعداد) ===== */
+/* ===== الإعدادات ===== */
 const SUPABASE_URL = "https://bxmuvxztvpmhgftcmcwu.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_N9f29vi9UcieMv77aXU1qg__AfaMHg_";
-/* ======================================================================== */
+/* ===================== */
 
 const BUCKET = "files", MAX = 20 * 1024 * 1024;
-const CATS = { lessons: "الدروس", worksheets: "أوراق العمل", projects: "المشاريع" };
+const CATS = { lessons: "الدروس", worksheets: "أوراق العمل", practice: "التدريبات الإلكترونية", projects: "معرض أعمال الطالبات" };
 const COURSES = { tqn107: "تقن107", tqn108: "تقن108", tqn221: "تقن221", tqn936: "تقن936" };
+const TERMS = ["الفصل الأول", "الفصل الثاني", "الفصل الثالث"];
 const TYPES = { "application/pdf": "PDF", "application/msword": "Word", "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "Word", "application/vnd.ms-powerpoint": "PowerPoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation": "PowerPoint", "image/jpeg": "صورة JPG", "image/png": "صورة PNG", "image/webp": "صورة WebP" };
+const PEXT = { pdf: "application/pdf", ppt: "application/vnd.ms-powerpoint", pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" };
+const COLS = "id,title,description,category,course,file_path,file_name,mime,size_bytes,link_url,published,created_at,student_name,section,year,term,rating,downloads";
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const isImg = m => m.startsWith("image/");
+const isImg = m => !!m && m.startsWith("image/");
 const fmtDate = d => new Date(d).toLocaleDateString("ar", { year: "numeric", month: "long", day: "numeric" });
-const fmtSize = b => b > 1048576 ? (b / 1048576).toFixed(1) + " م.ب" : Math.ceil(b / 1024) + " ك.ب";
-let toastT; function toast(msg, ok = true) { const t = $("#toast"); t.textContent = msg; t.className = ok ? "ok" : "err"; t.style.display = "block"; clearTimeout(toastT); toastT = setTimeout(() => t.style.display = "none", 5000); }
+const latin = v => String(v).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
+const termLabel = r => r.year ? r.term + " " + r.year : "غير محدد";
+let toastT; function toast(msg, ok = true) { const t = $("#toast"); t.textContent = msg; t.className = ok ? "ok" : "err"; t.style.display = "block"; clearTimeout(toastT); toastT = setTimeout(() => t.style.display = "none", 6000); }
 function confirmDlg(text, yes) { $("#cft").textContent = text; cf.showModal(); $("#cfy").onclick = () => { cf.close(); yes(); }; $("#cfn").onclick = () => cf.close(); }
 
-if (!/^https:\/\//.test(SUPABASE_URL)) { $("#app").innerHTML = '<div class="empty">الموقع غير مُعدّ بعد. افتحي ملف index.html وضعي بيانات المشروع في أعلى قسم الشيفرة، كما في دليل الإعداد.</div>'; throw new Error("not configured"); }
+if (!/^https:\/\//.test(SUPABASE_URL)) { $("#app").innerHTML = '<div class="empty">الموقع غير مُعدّ بعد. ضعي بيانات المشروع في أعلى قسم الشيفرة.</div>'; throw new Error("not configured"); }
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let SET = { year: null, term: null };
+const inTerm = r => !SET.year || (r.year === SET.year && r.term === SET.term);
 
-async function signedUrls(rows, download) {
-  const out = {};
-  await Promise.all(rows.map(async r => {
-    const { data } = await sb.storage.from(BUCKET).createSignedUrl(r.file_path, 3600, download ? { download: r.file_name } : undefined);
-    if (data) out[r.id] = data.signedUrl;
-  }));
-  return out;
+/* ===== أدوات الملفات ===== */
+async function sign(path, dl, name) { const { data } = await sb.storage.from(BUCKET).createSignedUrl(path, 3600, dl ? { download: name } : undefined); return data && data.signedUrl; }
+async function thumbs(rows) { const out = {}; await Promise.all(rows.filter(r => isImg(r.mime) && r.file_path).map(async r => { out[r.id] = await sign(r.file_path); })); return out; }
+const REG = {};
+async function act(r) {
+  sb.rpc("bump_resource", { rid: r.id }).then(() => {}, () => {});
+  if (r.link_url && !r.file_path) { window.open(r.link_url, "_blank", "noopener,noreferrer"); return; }
+  if (r.category === "projects" || r.category === "practice") {
+    const w = window.open("", "_blank"); const u = await sign(r.file_path);
+    if (!u) { if (w) w.close(); return toast("تعذّر فتح الملف.", false); }
+    w.location = (r.mime === "application/pdf" || isImg(r.mime)) ? u : "https://view.officeapps.live.com/op/embed.aspx?src=" + encodeURIComponent(u); return;
+  }
+  const u = await sign(r.file_path, true, r.file_name); if (!u) return toast("تعذّر تنزيل الملف.", false); location.href = u;
+}
+document.addEventListener("click", e => {
+  const z = e.target.closest("[data-z]");
+  if (z) { const r = REG[z.dataset.z]; lbimg.src = r.thumb; lbimg.alt = r.title; const can = r.category !== "projects" && r.file_path; lbdl.classList.toggle("hide", !can); lbdl.onclick = ev => { ev.preventDefault(); act(r); }; lb.showModal(); return; }
+  const a = e.target.closest("[data-a]"); if (a && REG[a.dataset.a]) { e.preventDefault(); act(REG[a.dataset.a]); }
+});
+function card(r) {
+  REG[r.id] = r; const lnk = r.link_url && !r.file_path, m = r.mime || "", prev = r.category === "projects" || r.category === "practice";
+  const top = isImg(m) && r.thumb ? `<button class="thumb" data-z="${r.id}" aria-label="تكبير الصورة: ${esc(r.title)}"><img src="${r.thumb}" alt="${esc(r.title)}" loading="lazy"></button>`
+    : `<div class="thumb" style="cursor:default"><span class="ficon">${lnk ? "رابط" : m.includes("pdf") ? "PDF" : m.includes("word") ? "DOC" : (m.includes("powerpoint") || m.includes("presentation")) ? "PPT" : "ملف"}</span></div>`;
+  const label = lnk ? (r.category === "practice" ? "فتح التدريب" : r.category === "projects" ? "فتح العمل" : "فتح الرابط") : prev ? "معاينة العمل" : "تنزيل الملف";
+  const stars = r.rating ? `<p class="stars" aria-label="التقييم ${r.rating} من 5">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</p>` : "";
+  return `<article class="card">${top}<div class="body"><h3>${esc(r.title)}</h3>${r.description ? `<p>${esc(r.description)}</p>` : ""}${r.student_name ? `<p class="who">الطالبة: ${esc(r.student_name)}<br>الشعبة: ${esc(r.section || "")}</p>` : ""}${stars}
+  <div class="meta"><span class="tag">${CATS[r.category]}</span><span class="tag">${lnk ? "رابط" : TYPES[m] || "ملف"}</span><span class="tag">${fmtDate(r.created_at)}</span></div>
+  ${r.downloads ? `<p class="note" style="margin:0">${lnk || prev ? "فُتح" : "نُزّل"} ${r.downloads} مرة</p>` : ""}
+  <button class="btn" data-a="${r.id}">${label}</button></div></article>`;
+}
+function galleryRows(projects) {
+  return Object.entries(COURSES).map(([k, v]) => { const rows = projects.filter(r => r.course === k);
+    return `<h3 style="margin:20px 0 8px"><a href="#/course/${k}" style="color:inherit">${v}</a></h3>` + (rows.length ? `<div class="strip">${rows.map(card).join("")}</div>` : `<p class="note">لا توجد أعمال منشورة بعد.</p>`); }).join("");
 }
 
-/* ===== صفحة الطلاب ===== */
-let all = [], filt = "all", q = "", course = null;
-async function publicPage(key) {
-  if (!COURSES[key]) return home();
-  course = key; filt = "all"; q = "";
-  $("#app").innerHTML = `<div class="row" style="justify-content:space-between;margin-bottom:6px"><h2 style="margin:0">${COURSES[key]}</h2><a class="btn ghost" href="#/">جميع المواد</a></div>
-  <label for="q">ابحثي عن ملف أو درس</label>
-  <input id="q" type="search" placeholder="اكتبي كلمة من العنوان أو الوصف">
-  <div class="chips" role="group" aria-label="التصنيفات">${[["all", "الكل"], ["lessons", "الدروس"], ["worksheets", "أوراق العمل"], ["projects", "المشاريع"]].map(([k, v]) => `<button class="chip" data-k="${k}" aria-pressed="${k === filt}">${v}</button>`).join("")}</div>
-  <div id="sub"></div>
-  <div id="list" class="grid"><div class="empty">جارٍ التحميل…</div></div>`;
-  $("#q").oninput = e => { q = e.target.value.trim(); draw(); };
-  document.querySelectorAll(".chip").forEach(c => c.onclick = () => { filt = c.dataset.k; document.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === c)); draw(); });
-  const { data, error } = await sb.from("resources").select("id,title,description,category,file_path,file_name,mime,size_bytes,published,created_at,student_name,section,course").eq("published", true).eq("course", key).order("created_at", { ascending: false });
-  if (error) { $("#list").innerHTML = '<div class="empty">تعذّر تحميل الملفات. تحققي من اتصالك بالإنترنت وأعيدي المحاولة.</div>'; return; }
-  if (course !== key) return;
-  all = data; const isP = r => r.category === "projects";
-  const [th, dl, vw] = await Promise.all([signedUrls(all.filter(r => isImg(r.mime))), signedUrls(all.filter(r => !isP(r)), true), signedUrls(all.filter(isP))]);
-  all.forEach(r => { r.thumb = th[r.id]; r.dl = dl[r.id]; r.view = vw[r.id]; }); draw();
-}
+/* ===== الصفحة الرئيسية ===== */
 async function home() {
-  course = null;
-  $("#app").innerHTML = `<h2 style="margin-top:0">اختاري المقرر</h2><div class="courses" id="cl">${Object.entries(COURSES).map(([k, v]) => `<a class="cc" href="#/course/${k}">${v}<small id="n-${k}">&nbsp;</small></a>`).join("")}</div>`;
-  const { data } = await sb.from("resources").select("id,course").eq("published", true);
-  if (data) Object.keys(COURSES).forEach(k => { const n = data.filter(x => x.course === k).length, el = $("#n-" + k); if (el) el.textContent = n ? n + " ملف" : "لا توجد ملفات بعد"; });
-}
-function draw() {
-  if (filt === "projects") { if (!$("#pf")) buildForm(); } else $("#sub").innerHTML = "";
-  const rows = all.filter(r => (filt === "all" || r.category === filt) && (!q || (r.title + " " + (r.description || "")).includes(q)));
-  $("#list").innerHTML = rows.length ? rows.map(r => `<article class="card">
-    ${isImg(r.mime) && r.thumb ? `<button class="thumb" data-id="${r.id}" aria-label="تكبير الصورة: ${esc(r.title)}"><img src="${r.thumb}" alt="${esc(r.title)}" loading="lazy"></button>` : `<div class="thumb" style="cursor:default"><span class="ficon">${r.mime.includes("pdf") ? "PDF" : r.mime.includes("word") ? "DOC" : "PPT"}</span></div>`}
-    <div class="body"><h3>${esc(r.title)}</h3>${r.description ? `<p>${esc(r.description)}</p>` : ""}${r.student_name ? `<p class="who">الطالبة: ${esc(r.student_name)}<br>الشعبة: ${esc(r.section || "")}</p>` : ""}
-    <div class="meta"><span class="tag">${CATS[r.category]}</span><span class="tag">${TYPES[r.mime]}</span><span class="tag">${fmtDate(r.created_at)}</span></div>
-    ${r.category === "projects" ? `<a class="btn" target="_blank" rel="noopener" href="${r.view ? (r.mime === "application/pdf" || isImg(r.mime) ? r.view : "https://view.officeapps.live.com/op/embed.aspx?src=" + encodeURIComponent(r.view)) : "#"}">معاينة المشروع</a>` : `<a class="btn" href="${r.dl || "#"}" download="${esc(r.file_name)}">تنزيل الملف</a>`}</div></article>`).join("") : `<div class="empty" style="grid-column:1/-1">${all.length ? "لا توجد نتائج مطابقة لبحثك." : "لم يُنشر أي ملف في هذه المادة بعد."}</div>`;
-  document.querySelectorAll(".thumb[data-id]").forEach(b => b.onclick = () => { const r = all.find(x => x.id === b.dataset.id); lbimg.src = r.thumb; lbimg.alt = r.title; lbdl.classList.toggle("hide", !r.dl); lbdl.href = r.dl || "#"; lbdl.setAttribute("download", r.file_name); lb.showModal(); });
+  $("#app").innerHTML = `<div class="stats" id="st"></div>
+  <h2>اختاري المقرر</h2><div class="courses">${Object.entries(COURSES).map(([k, v]) => `<a class="cc" href="#/course/${k}">${v}<small id="n-${k}">&nbsp;</small></a>`).join("")}</div>
+  <div class="row" style="justify-content:space-between;margin:30px 0 4px"><h2 style="margin:0">معرض أعمال الطالبات</h2><a class="btn acc" href="#/gallery">ارفعي عملك</a></div>
+  <p class="note" id="gt"></p><div id="gal"><div class="empty">جارٍ التحميل…</div></div>`;
+  sb.rpc("site_summary").then(({ data: sm }) => { if (!sm || !$("#st")) return; $("#st").innerHTML = [[sm.lessons, "الدروس"], [sm.works, "أعمال الطالبات"], [sm.visits, "الزوار"], [sm.downloads, "مرات التنزيل والفتح"]].map(([n, t]) => `<div class="stat"><b>${Number(n || 0).toLocaleString("en")}</b><span>${t}</span></div>`).join(""); });
+  const { data, error } = await sb.from("resources").select(COLS).eq("published", true).order("created_at", { ascending: false });
+  if (error) { $("#gal").innerHTML = '<div class="empty">تعذّر تحميل الملفات. تحققي من اتصالك بالإنترنت وأعيدي المحاولة.</div>'; return; }
+  Object.keys(COURSES).forEach(k => { const n = data.filter(x => x.course === k && x.category !== "projects").length, el = $("#n-" + k); if (el) el.textContent = n ? n + " ملف" : "لا توجد ملفات بعد"; });
+  const proj = data.filter(r => r.category === "projects" && inTerm(r)); const th = await thumbs(proj); proj.forEach(r => r.thumb = th[r.id]);
+  if (!$("#gal")) return; $("#gt").textContent = SET.year ? SET.term + " " + SET.year : ""; $("#gal").innerHTML = galleryRows(proj);
 }
 
-/* ===== رفع مشاريع الطالبات ===== */
-const PEXT = { pdf: "application/pdf", ppt: "application/vnd.ms-powerpoint", pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation" };
-const latin = v => v.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
-function buildForm() {
-  $("#sub").innerHTML = `<form id="pf" class="panel" novalidate><h2>رفع مشروعك</h2>
-  <p class="note">املئي بياناتك كلها أولاً، وبعدها يُفعَّل اختيار الملف. يظهر مشروعك في المعرض بعد مراجعة المعلمة. الصيغ المقبولة: PDF وPowerPoint (ppt وpptx)، بحد أقصى ${fmtSize(MAX)}.</p>
-  <label for="sn">الاسم الرباعي <span style="color:var(--bad)">*</span></label><input id="sn" type="text" maxlength="100" autocomplete="name" required>
-  <label for="ss">الشعبة <span style="color:var(--bad)">*</span></label><input id="ss" type="text" maxlength="30" required>
-  <label for="sa">الرقم الأكاديمي <span style="color:var(--bad)">*</span></label><input id="sa" type="text" inputmode="numeric" maxlength="15" dir="ltr" required>
-  <label for="st">عنوان المشروع <span style="color:var(--bad)">*</span></label><input id="st" type="text" maxlength="150" required>
-  <label for="sdesc">وصف المشروع (اختياري)</label><textarea id="sdesc" rows="2" maxlength="1000"></textarea>
-  <label for="sfile">ملف المشروع <span style="color:var(--bad)">*</span></label><input id="sfile" type="file" accept=".pdf,.ppt,.pptx" disabled>
+/* ===== صفحة المادة ===== */
+let filt = "all", q = "", cur = null, crs = [];
+async function coursePage(key, sub) {
+  cur = key; filt = "all"; q = "";
+  if (sub === "practice") {
+    $("#app").innerHTML = `<div class="row" style="justify-content:space-between;margin-bottom:10px"><h2 style="margin:0">التدريبات الإلكترونية · ${COURSES[key]}</h2><a class="btn ghost" href="#/course/${key}">العودة إلى ${COURSES[key]}</a></div><p class="note">ألعاب وتدريبات صنعتها طالبات متميزات. اضغطي لفتح التدريب في صفحة جديدة وحلّه.</p><div id="list" class="grid"><div class="empty">جارٍ التحميل…</div></div>`;
+    const { data, error } = await sb.from("resources").select(COLS).eq("published", true).eq("course", key).eq("category", "practice").order("created_at", { ascending: false });
+    if (cur !== key || !$("#list")) return;
+    if (error) return $("#list").innerHTML = '<div class="empty">تعذّر تحميل الملفات.</div>';
+    const th = await thumbs(data); data.forEach(r => r.thumb = th[r.id]);
+    $("#list").innerHTML = data.length ? data.map(card).join("") : '<div class="empty" style="grid-column:1/-1">لا توجد تدريبات منشورة بعد.</div>'; return;
+  }
+  $("#app").innerHTML = `<div class="row" style="justify-content:space-between;margin-bottom:6px"><h2 style="margin:0">${COURSES[key]}</h2><a class="btn ghost" href="#/">جميع المواد</a></div>
+  <label for="q">ابحثي عن ملف أو درس</label><input id="q" type="search" placeholder="اكتبي كلمة من العنوان أو الوصف">
+  <div class="chips" role="group" aria-label="التصنيفات">${[["all", "الكل"], ["lessons", "الدروس"], ["worksheets", "أوراق العمل"]].map(([k, v]) => `<button class="chip" data-k="${k}" aria-pressed="${k === filt}">${v}</button>`).join("")}</div>
+  <div id="list" class="grid"><div class="empty">جارٍ التحميل…</div></div>
+  <div class="row" style="justify-content:space-between;margin:30px 0 4px"><h2 style="margin:0">أعمال الطالبات في ${COURSES[key]}</h2><a class="btn acc" href="#/gallery">ارفعي عملك</a></div><div id="gal"></div>`;
+  $("#q").oninput = e => { q = e.target.value.trim(); drawCourse(); };
+  document.querySelectorAll(".chip[data-k]").forEach(c => c.onclick = () => { filt = c.dataset.k; document.querySelectorAll(".chip[data-k]").forEach(x => x.setAttribute("aria-pressed", x === c)); drawCourse(); });
+  const { data, error } = await sb.from("resources").select(COLS).eq("published", true).eq("course", key).order("created_at", { ascending: false });
+  if (cur !== key || !$("#list")) return;
+  if (error) { $("#list").innerHTML = '<div class="empty">تعذّر تحميل الملفات. تحققي من اتصالك بالإنترنت وأعيدي المحاولة.</div>'; return; }
+  const th = await thumbs(data); data.forEach(r => r.thumb = th[r.id]); crs = data; drawCourse();
+  const proj = data.filter(r => r.category === "projects" && inTerm(r));
+  if ($("#gal")) $("#gal").innerHTML = proj.length ? `<div class="strip">${proj.map(card).join("")}</div>` : '<p class="note">لا توجد أعمال منشورة بعد.</p>';
+}
+function drawCourse() {
+  const base = crs.filter(r => r.category === "lessons" || r.category === "worksheets");
+  const rows = base.filter(r => (filt === "all" || r.category === filt) && (!q || (r.title + " " + (r.description || "")).includes(q)));
+  const pc = crs.filter(r => r.category === "practice").length;
+  const pcard = (filt === "all" || filt === "lessons") && !q ? `<a class="cc mini" href="#/course/${cur}/practice" style="grid-column:1/-1">تدريبات إلكترونية<small>${pc ? pc + " تدريب" : "لا توجد تدريبات بعد"}</small></a>` : "";
+  $("#list").innerHTML = pcard + (rows.length ? rows.map(card).join("") : `<div class="empty" style="grid-column:1/-1">${base.length ? "لا توجد نتائج مطابقة لبحثك." : "لم يُنشر أي ملف في هذه المادة بعد."}</div>`);
+}
+
+/* ===== معرض الأعمال ورفع عمل ===== */
+async function galleryPage() {
+  $("#app").innerHTML = `<div class="row" style="justify-content:space-between;margin-bottom:10px"><h2 style="margin:0">معرض أعمال الطالبات</h2><a class="btn ghost" href="#/">الرئيسية</a></div>
+  <div id="sub"></div>
+  <div class="row" style="margin:22px 0 6px"><label for="tsel" style="margin:0">الفصل الدراسي</label><select id="tsel" style="max-width:320px"></select></div><div id="gal"><div class="empty">جارٍ التحميل…</div></div>`;
+  buildForm();
+  const { data, error } = await sb.from("resources").select(COLS).eq("published", true).eq("category", "projects").order("created_at", { ascending: false });
+  if (error || !$("#gal")) { if ($("#gal")) $("#gal").innerHTML = '<div class="empty">تعذّر تحميل الأعمال.</div>'; return; }
+  const th = await thumbs(data); data.forEach(r => r.thumb = th[r.id]);
+  const keys = [...new Set([SET.year ? SET.year + "|" + SET.term : null, ...data.map(r => (r.year || "") + "|" + (r.term || ""))].filter(Boolean))];
+  $("#tsel").innerHTML = keys.map(k => { const [y, t] = k.split("|"); return `<option value="${esc(k)}">${y ? esc(t + " " + y) : "غير محدد"}</option>`; }).join("");
+  const draw = () => { const [y, t] = $("#tsel").value.split("|"); $("#gal").innerHTML = galleryRows(data.filter(r => (r.year || "") === y && (r.term || "") === t)); };
+  $("#tsel").onchange = draw; draw();
+}
+async function buildForm() {
+  const { data: secs } = await sb.rpc("list_sections"); if (!$("#sub")) return;
+  const secField = Array.isArray(secs) && secs.length ? `<select id="ss" required><option value="">— اختاري الشعبة —</option>${secs.map(x => `<option>${esc(x)}</option>`).join("")}</select>` : `<input id="ss" type="text" maxlength="30" required>`;
+  const R = '<span style="color:var(--bad)">*</span>';
+  $("#sub").innerHTML = `<form id="pf" class="panel" novalidate><h2>رفع عمل جديد</h2>
+  <p class="note">املئي بياناتك كلها أولاً، وبعدها يُفعَّل رفع الملف أو إضافة الرابط. يظهر عملك في المعرض بعد مراجعة المعلمة، ويُسجَّل تلقائياً على الفصل الدراسي الحالي${SET.year ? " (" + esc(SET.term + " " + SET.year) + ")" : ""}.</p>
+  <label for="sc">المادة ${R}</label><select id="sc" required><option value="">— اختاري المادة —</option>${Object.entries(COURSES).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select>
+  <label for="ss">الشعبة ${R}</label>${secField}
+  <label for="sn">الاسم الرباعي ${R}</label><input id="sn" type="text" maxlength="100" autocomplete="name" required>
+  <label for="sa">الرقم الأكاديمي ${R}</label><input id="sa" type="text" inputmode="numeric" maxlength="15" dir="ltr" required>
+  <label for="st">عنوان العمل ${R}</label><input id="st" type="text" maxlength="150" required>
+  <label for="sdesc">وصف العمل (اختياري)</label><textarea id="sdesc" rows="2" maxlength="1000"></textarea>
+  <div class="row" style="margin-top:14px"><label style="margin:0;font-weight:500"><input type="radio" name="k" value="file" checked> رفع ملف</label><label style="margin:0;font-weight:500"><input type="radio" name="k" value="link"> رابط (موقع أو لعبة أو فيديو)</label></div>
+  <div id="fw"><label for="sfile">الملف ${R}</label><input id="sfile" type="file" accept=".pdf,.ppt,.pptx,.jpg,.jpeg,.png,.webp" disabled><p class="note">الصيغ: PDF وPowerPoint وصور JPG وPNG وWebP، بحد أقصى ${fmtSize(MAX)}.</p></div>
+  <div id="lw" class="hide"><label for="slink">رابط العمل ${R}</label><input id="slink" type="url" dir="ltr" placeholder="https://" disabled><p class="note">يجب أن يبدأ الرابط بـ https://</p></div>
   <p class="note" id="fnote"></p>
   <input id="hp" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
   <div class="bar hide" id="sbar"><i></i></div><p class="note hide" id="spct"></p>
-  <div class="row" style="margin-top:14px"><button class="btn acc" id="sbtn" type="submit">إرسال المشروع</button></div></form>`;
-  const info = () => { const n = $("#sn").value.trim().replace(/\s+/g, " "), sec = $("#ss").value.trim(), a = latin($("#sa").value.trim()), t = $("#st").value.trim();
-    const err = n.split(" ").length < 4 ? "يرجى كتابة الاسم الرباعي كاملاً (أربعة أسماء على الأقل)." : !sec ? "يرجى كتابة الشعبة." : !/^[0-9]{3,15}$/.test(a) ? "يرجى كتابة الرقم الأكاديمي (أرقام فقط)." : !t ? "يرجى كتابة عنوان المشروع." : null;
-    return { n, sec, a, t, err }; };
-  const sync = () => { const ok = !info().err, f = $("#sfile"); f.disabled = !ok; if (!ok) f.value = "";
-    $("#fnote").textContent = ok ? "" : "املئي الاسم الرباعي والشعبة والرقم الأكاديمي وعنوان المشروع أولاً ليتفعّل اختيار الملف."; };
-  ["sn", "ss", "sa", "st"].forEach(id => $("#" + id).addEventListener("input", sync)); sync();
+  <div class="row" style="margin-top:14px"><button class="btn acc" id="sbtn" type="submit">إرسال العمل</button></div></form>`;
+  const info = () => { const n = $("#sn").value.trim().replace(/\s+/g, " "), sec = $("#ss").value.trim(), a = latin($("#sa").value.trim()), t = $("#st").value.trim(), co = $("#sc").value;
+    const err = !co ? "يرجى اختيار المادة." : n.split(" ").length < 4 ? "يرجى كتابة الاسم الرباعي كاملاً (أربعة أسماء على الأقل)." : !sec ? "يرجى اختيار الشعبة." : !/^[0-9]{3,15}$/.test(a) ? "يرجى كتابة الرقم الأكاديمي (أرقام فقط)." : !t ? "يرجى كتابة عنوان العمل." : null;
+    return { n, sec, a, t, co, err }; };
+  const kind = () => document.querySelector("input[name=k]:checked").value;
+  const sync = () => { const ok = !info().err; $("#sfile").disabled = $("#slink").disabled = !ok; if (!ok) $("#sfile").value = "";
+    $("#fnote").textContent = ok ? "" : "املئي المادة والشعبة والاسم الرباعي والرقم الأكاديمي وعنوان العمل أولاً ليتفعّل رفع الملف أو الرابط."; };
+  ["sc", "ss", "sn", "sa", "st"].forEach(id => $("#" + id).addEventListener("input", sync));
+  document.querySelectorAll("input[name=k]").forEach(x => x.onchange = () => { $("#fw").classList.toggle("hide", kind() !== "file"); $("#lw").classList.toggle("hide", kind() !== "link"); }); sync();
   $("#pf").onsubmit = async e => {
-    e.preventDefault();
-    const okMsg = "تم إرسال مشروعك بنجاح. سيظهر في المعرض بعد مراجعة المعلمة.";
+    e.preventDefault(); const okMsg = "تم إرسال عملك بنجاح. سيظهر في المعرض بعد مراجعة المعلمة.";
     if ($("#hp").value) return toast(okMsg);
     const i = info(); if (i.err) return toast(i.err, false);
-    const file = $("#sfile").files[0]; if (!file) return toast("يرجى اختيار ملف المشروع.", false);
-    const ext = file.name.split(".").pop().toLowerCase(), mime = PEXT[ext];
-    if (!mime) return toast("صيغة الملف غير مدعومة. ارفعي مشروعك بصيغة PDF أو PowerPoint (ppt أو pptx).", false);
-    if (file.size > MAX) return toast("حجم الملف يتجاوز الحد المسموح به (" + fmtSize(MAX) + ").", false);
+    let file = null, link = null, ext = "", mime = "";
+    if (kind() === "file") { file = $("#sfile").files[0]; if (!file) return toast("يرجى اختيار ملف العمل.", false);
+      ext = file.name.split(".").pop().toLowerCase(); mime = PEXT[ext];
+      if (!mime) return toast("صيغة الملف غير مدعومة. ارفعي PDF أو PowerPoint أو صورة JPG أو PNG أو WebP.", false);
+      if (file.size > MAX) return toast("حجم الملف يتجاوز الحد المسموح به (" + fmtSize(MAX) + ").", false);
+    } else { link = $("#slink").value.trim(); if (!/^https:\/\/[^\s]+\.[^\s]+$/i.test(link)) return toast("يرجى كتابة رابط صحيح يبدأ بـ https://", false); }
     const btn = $("#sbtn"); btn.disabled = true;
     try {
-      const path = "projects/" + crypto.randomUUID() + "." + ext;
-      await upload(path, file, { anon: true, bar: "#sbar", pct: "#spct", mime });
-      const { error } = await sb.from("resources").insert({ title: i.t, description: $("#sdesc").value.trim() || null, category: "projects", course, file_path: path, file_name: file.name, mime, size_bytes: file.size, published: false, student_name: i.n, section: i.sec, academic_no: i.a });
-      if (error) throw error;
-      $("#pf").reset(); sync(); $("#sbar").classList.add("hide"); $("#spct").classList.add("hide"); toast(okMsg);
-    } catch (err) {
-      toast(err.message === "up413" ? "حجم الملف يتجاوز الحد المسموح به." : err.message === "net" ? "انقطع الاتصال أثناء الرفع. أعيدي المحاولة." : "تعذّر إرسال المشروع. تأكدي من اتصالك بالإنترنت وأعيدي المحاولة.", false);
-    } finally { btn.disabled = false; }
+      const { data: ok, error: ce } = await sb.rpc("check_student", { p_name: i.n, p_section: i.sec, p_no: i.a }); if (ce) throw ce;
+      if (!ok) return toast("بيانات الطالبة غير مطابقة لكشف الصف. تأكدي من الشعبة والاسم الرباعي والرقم الأكاديمي.", false);
+      const row = { title: i.t, description: $("#sdesc").value.trim() || null, category: "projects", course: i.co, published: false, student_name: i.n, section: i.sec, academic_no: i.a };
+      if (file) { const path = "projects/" + crypto.randomUUID() + "." + ext; await upload(path, file, { anon: true, bar: "#sbar", pct: "#spct", mime }); Object.assign(row, { file_path: path, file_name: file.name, mime, size_bytes: file.size }); } else row.link_url = link;
+      const { error } = await sb.from("resources").insert(row); if (error) throw error;
+      $("#pf").reset(); sync(); $("#sbar").classList.add("hide"); $("#spct").classList.add("hide"); $("#fw").classList.remove("hide"); $("#lw").classList.add("hide"); toast(okMsg);
+    } catch (err) { toast(err.message === "up413" ? "حجم الملف يتجاوز الحد المسموح به." : err.message === "net" ? "انقطع الاتصال أثناء الرفع. أعيدي المحاولة." : "تعذّر إرسال العمل. تأكدي من اتصالك بالإنترنت وأعيدي المحاولة.", false); }
+    finally { btn.disabled = false; }
   };
-}
-
-/* ===== دخول المعلمة ===== */
-function loginPage() {
-  $("#app").innerHTML = `<div class="panel" style="max-width:440px;margin:20px auto"><h2>دخول المعلمة</h2><p class="note">هذه الصفحة خاصة بالمعلمة فقط. (إصدار 4)</p>
-  <form id="lf" novalidate>
-  <label for="em">البريد الإلكتروني</label><input id="em" type="email" autocomplete="username" dir="ltr">
-  <label for="pw">كلمة المرور</label><input id="pw" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" dir="ltr" inputmode="text">
-  <label style="font-weight:500;display:flex;gap:8px;align-items:center;margin:8px 0 0"><input id="sh" type="checkbox" checked> إظهار كلمة المرور</label>
-  <div class="row" style="margin-top:16px"><button class="btn" id="go" type="submit">تسجيل الدخول</button><a class="btn ghost" href="#/">العودة إلى المكتبة</a></div></form>
-  <hr style="border:0;border-top:1px solid var(--line);margin:20px 0"><p class="note">إن تعذّرت كتابة كلمة المرور، اكتبي بريدك في الحقل الأول ثم اضغطي الزر التالي لتصلك رسالة برابط دخول مباشر.</p><button class="btn ghost" id="ml" type="button" style="margin-top:8px">إرسال رابط دخول إلى بريدي</button></div>`;
-  const go = async () => { const b = $("#go"); b.disabled = true; try {
-    const { error } = await sb.auth.signInWithPassword({ email: $("#em").value.trim(), password: $("#pw").value });
-    b.disabled = false; if (error) return toast((/invalid login/i.test(error.message) ? "البريد الإلكتروني أو كلمة المرور غير صحيحة." : "تعذّر تسجيل الدخول.") + " [" + error.message + "]", false); location.hash = "#/teacher"; route(); } catch (e) { b.disabled = false; toast("تعذّر الاتصال بالخادم. تحققي من رابط المشروع والمفتاح. [" + e.message + "]", false); } };
-  $("#sh").onchange = e => { $("#pw").type = e.target.checked ? "text" : "password"; };
-  $("#lf").onsubmit = e => { e.preventDefault(); go(); };
-  $("#ml").onclick = async () => { const em = $("#em").value.trim(); if (!em) return toast("اكتبي بريدك الإلكتروني أولاً.", false);
-    const { error } = await sb.auth.signInWithOtp({ email: em, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } });
-    error ? toast("تعذّر إرسال الرابط. [" + error.message + "]", false) : toast("تم إرسال رابط الدخول. افتحي بريدك واضغطي على الرابط."); };
-}
-
-/* ===== لوحة تحكم المعلمة ===== */
-let editing = null, tab = "lessons", tcourse = "tqn107";
-async function dashboard() {
-  const pt = location.hash.split("/"); tcourse = COURSES[pt[2]] || pt[2] === "none" ? pt[2] : "tqn107"; tab = CATS[pt[3]] ? pt[3] : "lessons";
-  if (editing && (editing.category !== tab || (editing.course || "none") !== tcourse)) editing = null;
-  $("#app").innerHTML = `<div class="row" style="justify-content:space-between;margin-bottom:14px"><h2 style="margin:0">لوحة تحكم المعلمة</h2></div>
-  <nav class="chips" id="ctabs" aria-label="المواد">${[...Object.entries(COURSES), ["none", "بدون مادة"]].map(([k, v]) => `<a class="chip${k === "none" ? " hide" : ""}" id="ct-${k}" href="#/teacher/${k}/${tab}" aria-pressed="${k === tcourse}">${v}</a>`).join("")}</nav>
-  <nav class="chips" id="tabs" aria-label="أقسام الملفات">${Object.entries(CATS).map(([k, v]) => `<a class="chip" id="tab-${k}" href="#/teacher/${tcourse}/${k}" aria-pressed="${k === tab}">${v}</a>`).join("")}</nav>
-  ${tab === "projects" ? `<div class="row" style="margin-bottom:14px"><button class="btn acc" id="addbtn" type="button">إضافة ملف</button></div>` : ""}
-  <div class="panel" id="fp"><h2 id="ft">إضافة ملف إلى «${COURSES[tcourse] || "بدون مادة"} / ${CATS[tab]}»</h2><p class="note" id="fn">الأنواع المقبولة: PDF وWord وPowerPoint وJPG وPNG وWebP. الحد الأقصى ${fmtSize(MAX)}.</p>
-  <label for="t">عنوان الملف</label><input id="t" type="text" maxlength="150">
-  <label for="d">الوصف (اختياري)</label><textarea id="d" rows="3" maxlength="1000"></textarea>
-  <label for="co">المادة</label><select id="co"><option value="">— اختاري المادة —</option>${Object.entries(COURSES).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select>
-  <label for="c">التصنيف</label><select id="c">${Object.entries(CATS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select>
-  <label for="f" id="fl">الملف</label><input id="f" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.webp">
-  <div class="bar hide" id="bar"><i></i></div><p class="note hide" id="pct"></p>
-  <div class="row" style="margin-top:16px"><button class="btn ghost" id="sd">حفظ كمسودة</button><button class="btn acc" id="sp">نشر الآن</button><button class="btn ghost hide" id="cx">إلغاء التعديل</button></div></div>
-  <div class="panel"><h2>ملفات «${COURSES[tcourse] || "بدون مادة"} / ${CATS[tab]}»</h2><div id="mine">جارٍ التحميل…</div></div>`;
-  
-  $("#sd").onclick = () => save(false); $("#sp").onclick = () => save(true); $("#cx").onclick = () => { editing = null; dashboard(); };
-  $("#c").value = tab; $("#co").value = COURSES[tcourse] ? tcourse : "";
-  if (tab === "projects" && !editing) $("#fp").classList.add("hide");
-  if ($("#addbtn")) $("#addbtn").onclick = () => { $("#fp").classList.remove("hide"); $("#addbtn").classList.add("hide"); $("#t").focus(); };
-  if ($("#addbtn") && editing) $("#addbtn").classList.add("hide");
-  if (editing) { $("#ft").textContent = "تعديل الملف"; $("#t").value = editing.title; $("#d").value = editing.description || ""; $("#c").value = editing.category; $("#co").value = editing.course || ""; $("#fl").textContent = "استبدال الملف (اتركيه فارغاً للإبقاء على الملف الحالي)"; $("#cx").classList.remove("hide"); }
-  list();
-}
-function validate(file) {
-  if (!file.type || !TYPES[file.type]) return "نوع الملف غير مدعوم. ارفعي PDF أو Word أو PowerPoint أو صورة JPG أو PNG أو WebP.";
-  if (file.size > MAX) return "حجم الملف يتجاوز الحد المسموح به (" + fmtSize(MAX) + ").";
 }
 function upload(path, file, o = {}) {
   const bar = o.bar || "#bar", pct = o.pct || "#pct", mime = o.mime || file.type;
@@ -249,26 +273,83 @@ function upload(path, file, o = {}) {
     x.onload = () => x.status < 300 ? res() : rej(new Error("up" + x.status)); x.onerror = () => rej(new Error("net")); x.send(file);
   });
 }
+
+/* ===== دخول المعلمة ===== */
+function loginPage() {
+  $("#app").innerHTML = `<div class="panel" style="max-width:440px;margin:20px auto"><h2>دخول المعلمة</h2><p class="note">هذه الصفحة خاصة بالمعلمة فقط.</p>
+  <form id="lf" novalidate><label for="em">البريد الإلكتروني</label><input id="em" type="email" autocomplete="username" dir="ltr">
+  <label for="pw">كلمة المرور</label><input id="pw" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" dir="ltr">
+  <label style="font-weight:500;display:flex;gap:8px;align-items:center;margin:8px 0 0"><input id="sh" type="checkbox" checked> إظهار كلمة المرور</label>
+  <div class="row" style="margin-top:16px"><button class="btn" id="go" type="submit">تسجيل الدخول</button><a class="btn ghost" href="#/">العودة إلى المكتبة</a></div></form>
+  <hr style="border:0;border-top:1px solid var(--line);margin:20px 0"><p class="note">إن تعذّرت كتابة كلمة المرور، اكتبي بريدك في الحقل الأول ثم اضغطي الزر التالي لتصلك رسالة برابط دخول مباشر.</p><button class="btn ghost" id="ml" type="button" style="margin-top:8px">إرسال رابط دخول إلى بريدي</button></div>`;
+  const go = async () => { const b = $("#go"); b.disabled = true; try {
+    const { error } = await sb.auth.signInWithPassword({ email: $("#em").value.trim(), password: $("#pw").value });
+    b.disabled = false; if (error) return toast((/invalid login/i.test(error.message) ? "البريد الإلكتروني أو كلمة المرور غير صحيحة." : "تعذّر تسجيل الدخول.") + " [" + error.message + "]", false); location.hash = "#/teacher"; route();
+  } catch (e) { b.disabled = false; toast("تعذّر الاتصال بالخادم. [" + e.message + "]", false); } };
+  $("#sh").onchange = e => { $("#pw").type = e.target.checked ? "text" : "password"; };
+  $("#lf").onsubmit = e => { e.preventDefault(); go(); };
+  $("#ml").onclick = async () => { const em = $("#em").value.trim(); if (!em) return toast("اكتبي بريدك الإلكتروني أولاً.", false);
+    const { error } = await sb.auth.signInWithOtp({ email: em, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } });
+    error ? toast("تعذّر إرسال الرابط. [" + error.message + "]", false) : toast("تم إرسال رابط الدخول. افتحي بريدك واضغطي على الرابط."); };
+}
+
+/* ===== لوحة التحكم ===== */
+let editing = null, tab = "lessons", tcourse = "tqn107";
+const dashNav = a => `<nav class="chips" aria-label="أقسام اللوحة">${[["files", "الملفات"], ["stats", "الإحصاءات"], ["settings", "الإعدادات"]].map(([k, v]) => `<a class="chip" href="#/teacher/${k}" aria-pressed="${k === a}">${v}</a>`).join("")}</nav>`;
+function dashboard() {
+  const pt = location.hash.split("/");
+  if (pt[2] === "stats") return statsPage(); if (pt[2] === "settings") return settingsPage();
+  tcourse = COURSES[pt[3]] || pt[3] === "none" ? pt[3] : "tqn107"; tab = CATS[pt[4]] ? pt[4] : "lessons";
+  if (editing && (editing.category !== tab || (editing.course || "none") !== tcourse)) editing = null;
+  $("#app").innerHTML = `<h2 style="margin-top:0">لوحة تحكم المعلمة</h2>${dashNav("files")}
+  <nav class="chips" id="ctabs" aria-label="المواد">${[...Object.entries(COURSES), ["none", "بدون مادة"]].map(([k, v]) => `<a class="chip${k === "none" ? " hide" : ""}" id="ct-${k}" href="#/teacher/files/${k}/${tab}" aria-pressed="${k === tcourse}">${v}</a>`).join("")}</nav>
+  <nav class="chips" id="tabs" aria-label="أقسام الملفات">${Object.entries(CATS).map(([k, v]) => `<a class="chip" id="tab-${k}" href="#/teacher/files/${tcourse}/${k}" aria-pressed="${k === tab}">${v}</a>`).join("")}</nav>
+  ${tab === "projects" ? `<div class="row" style="margin-bottom:14px"><button class="btn acc" id="addbtn" type="button">إضافة ملف</button></div>` : ""}
+  <div class="panel" id="fp"><h2 id="ft">إضافة إلى «${COURSES[tcourse] || "بدون مادة"} / ${CATS[tab]}»</h2><p class="note" id="fn">الأنواع المقبولة: PDF وWord وPowerPoint وJPG وPNG وWebP. الحد الأقصى ${fmtSize(MAX)}. يمكنك بدلاً من الملف كتابة رابط (فيديو أو موقع أو لعبة).</p>
+  <label for="t">عنوان الملف</label><input id="t" type="text" maxlength="150">
+  <label for="d">الوصف (اختياري)</label><textarea id="d" rows="3" maxlength="1000"></textarea>
+  <label for="co">المادة</label><select id="co"><option value="">— اختاري المادة —</option>${Object.entries(COURSES).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select>
+  <label for="c">التصنيف</label><select id="c">${Object.entries(CATS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select>
+  <label for="f" id="fl">الملف</label><input id="f" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.webp">
+  <label for="lk">أو رابط (اختياري)</label><input id="lk" type="url" dir="ltr" placeholder="https://">
+  <div class="bar hide" id="bar"><i></i></div><p class="note hide" id="pct"></p>
+  <div class="row" style="margin-top:16px"><button class="btn ghost" id="sd">حفظ كمسودة</button><button class="btn acc" id="sp">نشر الآن</button><button class="btn ghost hide" id="cx">إلغاء التعديل</button></div></div>
+  <div class="panel"><h2>ملفات «${COURSES[tcourse] || "بدون مادة"} / ${CATS[tab]}»</h2><div id="mine">جارٍ التحميل…</div></div>`;
+  $("#sd").onclick = () => save(false); $("#sp").onclick = () => save(true); $("#cx").onclick = () => { editing = null; dashboard(); };
+  $("#c").value = tab; $("#co").value = COURSES[tcourse] ? tcourse : "";
+  if (tab === "projects" && !editing) $("#fp").classList.add("hide");
+  if ($("#addbtn")) { $("#addbtn").onclick = () => { $("#fp").classList.remove("hide"); $("#addbtn").classList.add("hide"); $("#t").focus(); }; if (editing) $("#addbtn").classList.add("hide"); }
+  if (editing) { $("#ft").textContent = "تعديل الملف"; $("#t").value = editing.title; $("#d").value = editing.description || ""; $("#c").value = editing.category; $("#co").value = editing.course || ""; $("#lk").value = editing.link_url || ""; $("#fl").textContent = "استبدال الملف (اتركيه فارغاً للإبقاء على الملف الحالي)"; $("#cx").classList.remove("hide"); }
+  list();
+}
+function validate(file) {
+  if (!file.type || !TYPES[file.type]) return "نوع الملف غير مدعوم. ارفعي PDF أو Word أو PowerPoint أو صورة JPG أو PNG أو WebP.";
+  if (file.size > MAX) return "حجم الملف يتجاوز الحد المسموح به (" + fmtSize(MAX) + ").";
+}
 async function save(publish) {
-  const title = $("#t").value.trim(), file = $("#f").files[0];
+  const title = $("#t").value.trim(), file = $("#f").files[0], link = $("#lk").value.trim();
   if (!title) return toast("يرجى كتابة عنوان الملف.", false);
   if (!$("#co").value) return toast("يرجى اختيار المادة.", false);
-  if (!editing && !file) return toast("يرجى اختيار ملف للرفع.", false);
+  if (link && !/^https:\/\/[^\s]+$/i.test(link)) return toast("الرابط يجب أن يبدأ بـ https://", false);
+  if (!editing && !file && !link) return toast("يرجى اختيار ملف للرفع أو كتابة رابط.", false);
   if (file) { const v = validate(file); if (v) return toast(v, false); }
   $("#sd").disabled = $("#sp").disabled = true;
   try {
     const row = { title, description: $("#d").value.trim() || null, category: $("#c").value, course: $("#co").value, published: publish, updated_at: new Date().toISOString() };
     let oldPath = null;
     if (file) {
-      const ext = file.name.split(".").pop().toLowerCase().replace(/[^a-z0-9]/g, "");
-      const path = crypto.randomUUID() + "." + ext; await upload(path, file);
-      Object.assign(row, { file_path: path, file_name: file.name, mime: file.type, size_bytes: file.size });
+      const ext = file.name.split(".").pop().toLowerCase().replace(/[^a-z0-9]/g, ""), path = crypto.randomUUID() + "." + ext; await upload(path, file);
+      Object.assign(row, { file_path: path, file_name: file.name, mime: file.type, size_bytes: file.size, link_url: null });
       if (editing) oldPath = editing.file_path;
+    } else if (link) {
+      row.link_url = link;
+      if (editing && editing.file_path) { Object.assign(row, { file_path: null, file_name: null, mime: null, size_bytes: null }); oldPath = editing.file_path; }
     }
-    const q = editing ? sb.from("resources").update(row).eq("id", editing.id) : sb.from("resources").insert(row);
-    const { error } = await q; if (error) throw error;
+    const qy = editing ? sb.from("resources").update(row).eq("id", editing.id) : sb.from("resources").insert(row);
+    const { error } = await qy; if (error) throw error;
     if (oldPath) await sb.storage.from(BUCKET).remove([oldPath]);
-    const was = editing; editing = null; if (row.category !== tab || row.course !== tcourse) location.hash = "#/teacher/" + row.course + "/" + row.category; else await dashboard();
+    const was = editing; editing = null;
+    if (row.category !== tab || row.course !== tcourse) location.hash = "#/teacher/files/" + row.course + "/" + row.category; else dashboard();
     toast(was ? "تم حفظ التعديلات بنجاح" : publish ? "تم نشر الملف بنجاح" : "تم حفظ الملف كمسودة");
   } catch (e) {
     $("#sd").disabled = $("#sp").disabled = false;
@@ -278,28 +359,90 @@ async function save(publish) {
 async function list() {
   const { data, error } = await sb.from("resources").select("*").order("created_at", { ascending: false });
   if (error) { $("#mine").textContent = "تعذّر تحميل الملفات. قد لا يكون حسابك مرتبطاً بصلاحية المعلمة؛ راجعي دليل الإعداد."; return; }
-  const cOf = x => x.course || "none", inC = data.filter(x => cOf(x) === tcourse);
-  [...Object.entries(COURSES), ["none", "بدون مادة"]].forEach(([k, v]) => { const sub = data.filter(x => cOf(x) === k), pend = sub.filter(x => !x.published && x.student_name).length, a = $("#ct-" + k);
-    if (a) { a.textContent = v + " (" + sub.length + ")" + (pend ? " · " + pend + " جديد" : ""); if (k === "none") a.classList.toggle("hide", !sub.length && tcourse !== "none"); } });
-  Object.entries(CATS).forEach(([k, v]) => { const sub = inC.filter(x => x.category === k), pend = sub.filter(x => !x.published && x.student_name).length, a = $("#tab-" + k);
-    if (a) a.textContent = v + " (" + sub.length + ")" + (pend ? " · " + pend + " بانتظار المراجعة" : ""); });
+  const cOf = x => x.course || "none", inC = data.filter(x => cOf(x) === tcourse), pendOf = a => a.filter(x => !x.published && x.student_name).length;
+  [...Object.entries(COURSES), ["none", "بدون مادة"]].forEach(([k, v]) => { const sub = data.filter(x => cOf(x) === k), a = $("#ct-" + k), p = pendOf(sub);
+    if (a) { a.textContent = v + " (" + sub.length + ")" + (p ? " · " + p + " جديد" : ""); if (k === "none") a.classList.toggle("hide", !sub.length && tcourse !== "none"); } });
+  Object.entries(CATS).forEach(([k, v]) => { const sub = inC.filter(x => x.category === k), a = $("#tab-" + k), p = pendOf(sub); if (a) a.textContent = v + " (" + sub.length + ")" + (p ? " · " + p + " بانتظار المراجعة" : ""); });
   const rows = inC.filter(x => x.category === tab);
   $("#mine").innerHTML = rows.length ? "" : `<div class="empty">لا توجد ملفات في «${COURSES[tcourse] || "بدون مادة"} / ${CATS[tab]}» بعد.</div>`;
   rows.forEach(r => {
-    const el = document.createElement("div"); el.className = "item";
-    el.innerHTML = `<div class="info"><b>${esc(r.title)}</b><span class="note">${CATS[r.category] || r.category} · ${TYPES[r.mime]} · ${fmtDate(r.created_at)}</span>${r.student_name ? `<span class="note">الطالبة: ${esc(r.student_name)} · الشعبة: ${esc(r.section || "")} · الرقم الأكاديمي: ${esc(r.academic_no || "")}</span>` : ""}</div>
-    <span class="st ${r.published ? "pub" : "dr"}">${r.published ? "منشور" : r.student_name ? "بانتظار المراجعة" : "مسودة"}</span>
-    <button class="btn ghost" data-a="open">فتح الملف</button><button class="btn ghost" data-a="edit">تعديل</button><button class="btn ghost" data-a="tog">${r.published ? "إلغاء النشر" : "نشر"}</button><button class="btn bad" data-a="del">حذف</button>`;
-    el.querySelector('[data-a=open]').onclick = async () => { const w = window.open("", "_blank"); const { data } = await sb.storage.from(BUCKET).createSignedUrl(r.file_path, 600); if (data) w.location = data.signedUrl; else { if (w) w.close(); toast("تعذّر فتح الملف.", false); } };
-    el.querySelector('[data-a=edit]').onclick = () => { editing = r; dashboard(); scrollTo(0, 0); };
-    el.querySelector('[data-a=tog]').onclick = async () => { const { error } = await sb.from("resources").update({ published: !r.published, updated_at: new Date().toISOString() }).eq("id", r.id); error ? toast("تعذّر تغيير حالة النشر.", false) : (toast(r.published ? "تم إلغاء نشر الملف" : "تم نشر الملف بنجاح"), list()); };
-    el.querySelector('[data-a=del]').onclick = () => confirmDlg(`هل تريدين حذف «${r.title}» نهائياً؟ لا يمكن التراجع عن ذلك.`, async () => {
-      await sb.storage.from(BUCKET).remove([r.file_path]); const { error } = await sb.from("resources").delete().eq("id", r.id);
-      error ? toast("تعذّر حذف الملف.", false) : (toast("تم حذف الملف"), list()); });
+    const lnk = r.link_url && !r.file_path, stud = !!r.student_name, el = document.createElement("div"); el.className = "item";
+    el.innerHTML = `<div class="info"><b>${esc(r.title)}</b><span class="note">${lnk ? "رابط" : TYPES[r.mime] || "ملف"} · ${fmtDate(r.created_at)}${r.year ? " · " + esc(termLabel(r)) : ""}${r.downloads ? " · فُتح/نُزّل " + r.downloads + " مرة" : ""}</span>${stud ? `<span class="note">الطالبة: ${esc(r.student_name)} · الشعبة: ${esc(r.section || "")} · الرقم الأكاديمي: ${esc(r.academic_no || "")}</span>` : ""}</div>
+    <span class="st ${r.published ? "pub" : "dr"}">${r.published ? "منشور" : stud ? "بانتظار المراجعة" : "مسودة"}</span>
+    ${stud ? `<select data-a="rate" aria-label="التقييم" style="width:auto;padding:8px"><option value="">بدون تقييم</option>${[1, 2, 3, 4, 5].map(n => `<option value="${n}"${r.rating === n ? " selected" : ""}>${"★".repeat(n)} (${n} من 5)</option>`).join("")}</select>` : ""}
+    <button class="btn ghost" data-a="open">${lnk ? "فتح الرابط" : "فتح الملف"}</button><button class="btn ghost" data-a="edit">تعديل</button><button class="btn ghost" data-a="tog">${r.published ? "إلغاء النشر" : "نشر"}</button>
+    ${r.category === "projects" ? '<button class="btn ghost" data-a="mv">نقل إلى التدريبات الإلكترونية</button>' : stud && r.category === "practice" ? '<button class="btn ghost" data-a="mv2">إرجاع إلى المعرض</button>' : ""}<button class="btn bad" data-a="del">حذف</button>`;
+    const on = (k, f) => { const b = el.querySelector(`[data-a=${k}]`); if (b) b.onclick = f; };
+    const upd = async (patch, msg) => { const { error } = await sb.from("resources").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", r.id); error ? toast("تعذّر تنفيذ العملية.", false) : (toast(msg), list()); };
+    on("open", async () => { if (lnk) return window.open(r.link_url, "_blank", "noopener,noreferrer"); const w = window.open("", "_blank"); const u = await sign(r.file_path); if (u) w.location = u; else { if (w) w.close(); toast("تعذّر فتح الملف.", false); } });
+    on("edit", () => { editing = r; dashboard(); scrollTo(0, 0); });
+    on("tog", () => upd({ published: !r.published }, r.published ? "تم إلغاء نشر الملف" : "تم نشر الملف بنجاح"));
+    on("mv", () => upd({ category: "practice" }, "تم نقل العمل إلى التدريبات الإلكترونية"));
+    on("mv2", () => upd({ category: "projects" }, "تم إرجاع العمل إلى المعرض"));
+    const rs = el.querySelector("[data-a=rate]"); if (rs) rs.onchange = () => upd({ rating: rs.value ? Number(rs.value) : null }, "تم حفظ التقييم");
+    on("del", () => confirmDlg(`هل تريدين حذف «${r.title}» نهائياً؟ لا يمكن التراجع عن ذلك.`, async () => {
+      if (r.file_path) await sb.storage.from(BUCKET).remove([r.file_path]); const { error } = await sb.from("resources").delete().eq("id", r.id);
+      error ? toast("تعذّر حذف الملف.", false) : (toast("تم حذف الملف"), list()); }));
     $("#mine").appendChild(el);
   });
 }
 
+/* ===== الإحصاءات ===== */
+async function statsPage() {
+  $("#app").innerHTML = `<h2 style="margin-top:0">لوحة تحكم المعلمة</h2>${dashNav("stats")}<div class="panel" id="sp1">جارٍ التحميل…</div>`;
+  const { data, error } = await sb.from("resources").select("year,term,category,course,published,downloads");
+  if (error) return $("#sp1").textContent = "تعذّر تحميل الإحصاءات.";
+  const g = {}; data.forEach(r => { const k = termLabel(r); (g[k] = g[k] || []).push(r); });
+  const th = c => `<th>${c}</th>`, td = c => `<td>${c}</td>`;
+  const t1 = Object.entries(g).map(([k, a]) => `<tr>${td(esc(k))}${["lessons", "worksheets", "practice"].map(c => td(a.filter(x => x.category === c).length)).join("")}${td(a.filter(x => x.category === "projects" && x.published).length + " من " + a.filter(x => x.category === "projects").length)}${td(a.reduce((s, x) => s + (x.downloads || 0), 0))}</tr>`).join("");
+  const t2 = Object.entries(g).map(([k, a]) => `<tr>${td(esc(k))}${Object.keys(COURSES).map(c => td(a.filter(x => x.category === "projects" && x.course === c).length)).join("")}</tr>`).join("");
+  $("#sp1").innerHTML = `<h2>حصر الأعمال لكل فصل دراسي</h2><p class="note">الأعمال المنشورة من الإجمالي، وتشمل أعمال الطالبات المرسلة.</p>
+  <div class="tw"><table><thead><tr>${th("الفصل الدراسي")}${th("الدروس")}${th("أوراق العمل")}${th("التدريبات")}${th("أعمال الطالبات (منشور من الإجمالي)")}${th("مرات التنزيل والفتح")}</tr></thead><tbody>${t1 || '<tr><td colspan="6">لا توجد بيانات.</td></tr>'}</tbody></table></div>
+  <h2 style="margin-top:26px">أعمال الطالبات حسب المادة</h2>
+  <div class="tw"><table><thead><tr>${th("الفصل الدراسي")}${Object.values(COURSES).map(th).join("")}</tr></thead><tbody>${t2 || '<tr><td colspan="5">لا توجد بيانات.</td></tr>'}</tbody></table></div>`;
+}
+
+/* ===== الإعدادات وكشف الطالبات ===== */
+async function settingsPage() {
+  $("#app").innerHTML = `<h2 style="margin-top:0">لوحة تحكم المعلمة</h2>${dashNav("settings")}
+  <div class="panel"><h2>السنة الدراسية والفصل</h2><p class="note">كل عمل جديد (من الطالبات أو منك) يُسجَّل تلقائياً على الفصل المحدد هنا، ويظهر في المعرض ضمن هذا الفصل. غيّريه عند بدء فصل جديد.</p>
+  <label for="sy">السنة الدراسية</label><input id="sy" type="text" dir="ltr" style="text-align:right" placeholder="2026-2027م">
+  <label for="stm">الفصل</label><select id="stm">${TERMS.map(t => `<option>${t}</option>`).join("")}</select>
+  <div class="row" style="margin-top:14px"><button class="btn acc" id="ssv">حفظ</button></div></div>
+  <div class="panel"><h2>كشف الصفوف وأسماء الطالبات</h2>
+  <p class="note">ارفعي ملف Excel (xlsx) فيه ثلاثة أعمدة بعناوين: <b>الشعبة</b> و<b>الاسم</b> و<b>الرقم الأكاديمي</b>. بعد رفعه تختار الطالبة شعبتها من قائمة، ولا يُقبل عملها إلا إذا طابقت بياناتها الكشف. وما دام الكشف فارغاً لا يُطبَّق التحقق.</p>
+  <p id="rs" class="note"></p>
+  <div id="dz" class="drop" tabindex="0" role="button">اسحبي ملف Excel وأفلتيه هنا، أو اضغطي لاختياره من جهازك</div><input id="rf" type="file" accept=".xlsx,.xls,.csv" class="hide"><div id="rp"></div>
+  <div class="row" style="margin-top:14px"><button class="btn bad hide" id="rdel">حذف الكشف كاملاً</button></div></div>`;
+  $("#sy").value = SET.year || ""; if (SET.term) $("#stm").value = SET.term;
+  $("#ssv").onclick = async () => { const y = $("#sy").value.trim(), t = $("#stm").value; if (!y) return toast("يرجى كتابة السنة الدراسية.", false);
+    const { data, error } = await sb.from("settings").update({ year: y, term: t }).eq("id", 1).select(); if (error || !data || !data.length) return toast("تعذّر حفظ الإعدادات.", false); SET = { year: y, term: t }; toast("تم حفظ السنة الدراسية والفصل"); };
+  const refresh = async () => { const { count } = await sb.from("students").select("*", { count: "exact", head: true }); const { data: s } = await sb.rpc("list_sections");
+    $("#rs").textContent = count ? `الكشف الحالي: ${count} طالبة في ${(s || []).length} شعبة.` : "لا يوجد كشف مرفوع بعد، ولذلك يُقبل أي اسم ورقم من الطالبات."; $("#rdel").classList.toggle("hide", !count); };
+  refresh();
+  $("#rdel").onclick = () => confirmDlg("هل تريدين حذف كشف الطالبات كاملاً؟ سيُقبل بعدها أي اسم ورقم عند رفع الأعمال.", async () => { const { error } = await sb.from("students").delete().neq("academic_no", ""); error ? toast("تعذّر حذف الكشف.", false) : (toast("تم حذف الكشف"), refresh()); });
+  const dz = $("#dz"); dz.onclick = () => $("#rf").click();
+  ["dragenter", "dragover"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add("on"); }));
+  ["dragleave", "drop"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove("on"); }));
+  dz.addEventListener("drop", e => readRoster(e.dataTransfer.files[0], refresh)); $("#rf").onchange = e => { readRoster(e.target.files[0], refresh); e.target.value = ""; };
+}
+async function readRoster(file, refresh) {
+  if (!file) return; if (typeof XLSX === "undefined") return toast("تعذّر تحميل مكتبة قراءة Excel. تحققي من الاتصال بالإنترنت وأعيدي تحميل الصفحة.", false);
+  let rows; try { const wb = XLSX.read(await file.arrayBuffer(), { type: "array" }); rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" }); } catch (e) { return toast("تعذّرت قراءة الملف. تأكدي أنه ملف Excel سليم.", false); }
+  let h = -1, ci = {}; for (let i = 0; i < Math.min(rows.length, 10); i++) { const c = rows[i].map(x => String(x)); const s = c.findIndex(x => x.includes("شعب")), n = c.findIndex(x => x.includes("اسم")), a = c.findIndex(x => x.includes("رقم") || x.includes("اكاديمي") || x.includes("أكاديمي")); if (s >= 0 && n >= 0 && a >= 0) { h = i; ci = { s, n, a }; break; } }
+  if (h < 0) return toast("لم أجد الأعمدة المطلوبة. يجب أن تحتوي الصفوف الأولى على عناوين: الشعبة، الاسم، الرقم الأكاديمي.", false);
+  const map = new Map(); rows.slice(h + 1).forEach(r => { const name = String(r[ci.n] ?? "").trim().replace(/\s+/g, " "), sec = latin(String(r[ci.s] ?? "").trim()), no = latin(String(r[ci.a] ?? "").trim()); if (name && sec && /^[0-9]{3,15}$/.test(no)) map.set(no, { academic_no: no, name, section: sec }); });
+  const list = [...map.values()]; if (!list.length) return toast("لم أجد أي صف صالح. تأكدي أن الرقم الأكاديمي أرقام فقط.", false);
+  const secs = [...new Set(list.map(x => x.section))];
+  $("#rp").innerHTML = `<div class="panel" style="margin-top:14px"><b>تم العثور على ${list.length} طالبة في ${secs.length} شعبة.</b><div class="tw"><table><thead><tr><th>الشعبة</th><th>الاسم</th><th>الرقم الأكاديمي</th></tr></thead><tbody>${list.slice(0, 5).map(x => `<tr><td>${esc(x.section)}</td><td>${esc(x.name)}</td><td>${esc(x.academic_no)}</td></tr>`).join("")}</tbody></table></div><p class="note">معاينة أول 5 صفوف.</p>
+  <div class="row"><button class="btn acc" id="rrep">استبدال الكشف الحالي</button><button class="btn ghost" id="radd">إضافة إلى الكشف الحالي</button></div></div>`;
+  const run = async replace => { try { if (replace) { const { error } = await sb.from("students").delete().neq("academic_no", ""); if (error) throw error; }
+    for (let i = 0; i < list.length; i += 500) { const { error } = await sb.from("students").upsert(list.slice(i, i + 500), { onConflict: "academic_no" }); if (error) throw error; }
+    $("#rp").innerHTML = ""; toast("تم رفع كشف الطالبات بنجاح"); refresh(); } catch (e) { toast("تعذّر رفع الكشف. تأكدي من صلاحية حسابك وأنك نفّذتِ ملف التحديث في Supabase.", false); } };
+  $("#rrep").onclick = () => confirmDlg("سيُحذف الكشف الحالي ويُستبدل بالملف الجديد. هل تريدين المتابعة؟", () => run(true)); $("#radd").onclick = () => run(false);
+}
+
+/* ===== التنقل ===== */
 async function setNav(session, page) {
   const nav = $("#nav"); nav.innerHTML = "";
   const link = (t, h, cls = "ghost") => { const a = document.createElement("a"); a.className = "btn " + cls; a.href = h; a.textContent = t; nav.appendChild(a); };
@@ -312,12 +455,19 @@ async function setNav(session, page) {
   }
 }
 async function route() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (location.hash.startsWith("#/teacher")) { if (session) { setNav(session, "dash"); dashboard(); } else { setNav(null, "login"); loginPage(); } }
-  else { setNav(session, "public"); const m = location.hash.match(/^#\/course\/(\w+)/); publicPage(m ? m[1] : null); }
+  const { data: { session } } = await sb.auth.getSession(), h = location.hash;
+  if (h.startsWith("#/teacher")) { if (session) { setNav(session, "dash"); dashboard(); } else { setNav(null, "login"); loginPage(); } return; }
+  setNav(session, "public"); scrollTo(0, 0);
+  const m = h.match(/^#\/course\/(\w+)(?:\/(\w+))?/);
+  if (m && COURSES[m[1]]) coursePage(m[1], m[2]); else if (h.startsWith("#/gallery")) galleryPage(); else home();
 }
 addEventListener("hashchange", route);
-if (location.hash.includes("access_token")) sb.auth.getSession().then(() => { location.hash = "#/teacher"; }); else route();
+(async () => {
+  try { const { data } = await sb.from("settings").select("year,term").eq("id", 1).maybeSingle(); if (data) SET = data; } catch (e) {}
+  try { if (!sessionStorage.getItem("seen")) { sessionStorage.setItem("seen", "1"); await sb.rpc("track_visit"); } } catch (e) {}
+  if (location.hash.includes("access_token")) sb.auth.getSession().then(() => { location.hash = "#/teacher"; }); else route();
+})();
+
 </script>
 </body>
 </html>
