@@ -95,7 +95,8 @@ const SUPABASE_ANON_KEY = "sb_publishable_N9f29vi9UcieMv77aXU1qg__AfaMHg_";
 const BUCKET = "files", MAX = 20 * 1024 * 1024;
 const CATS = { lessons: "الدروس", worksheets: "أوراق العمل", practice: "التدريبات الإلكترونية", projects: "معرض أعمال الطالبات" };
 const COURSES = { tqn107: "تقن107", tqn108: "تقن108", tqn221: "تقن221", tqn936: "تقن936" };
-const TERMS = ["الفصل الأول", "الفصل الثاني", "الفصل الثالث"];
+const YEARS = ["2025-2026م", "2026-2027م", "2027-2028م"], TERMS = ["الفصل الأول", "الفصل الثاني"];
+const PERIODS = YEARS.flatMap(y => TERMS.map(t => ({ y, t, v: y + "|" + t, label: "السنة الدراسية " + y + " — " + t })));
 const TYPES = { "application/pdf": "PDF", "application/msword": "Word", "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "Word", "application/vnd.ms-powerpoint": "PowerPoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation": "PowerPoint", "image/jpeg": "صورة JPG", "image/png": "صورة PNG", "image/webp": "صورة WebP" };
 const PEXT = { pdf: "application/pdf", ppt: "application/vnd.ms-powerpoint", pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" };
 const COLS = "id,title,description,category,course,file_path,file_name,mime,size_bytes,link_url,published,created_at,student_name,section,year,term,rating,downloads";
@@ -306,7 +307,7 @@ function dashboard() {
   $("#app").innerHTML = `<h2 style="margin-top:0">لوحة تحكم المعلمة</h2>${dashNav("files")}
   <nav class="chips" id="ctabs" aria-label="المواد">${[...Object.entries(COURSES), ["none", "بدون مادة"]].map(([k, v]) => `<a class="chip${k === "none" ? " hide" : ""}" id="ct-${k}" href="#/teacher/files/${k}/${tab}" aria-pressed="${k === tcourse}">${v}</a>`).join("")}</nav>
   <nav class="chips" id="tabs" aria-label="أقسام الملفات">${Object.entries(CATS).map(([k, v]) => `<a class="chip" id="tab-${k}" href="#/teacher/files/${tcourse}/${k}" aria-pressed="${k === tab}">${v}</a>`).join("")}</nav>
-  ${tab === "projects" ? `<p class="note" style="margin:0 0 14px">أعمال هذا القسم ترفعها الطالبات وحدهن من صفحة «معرض أعمال الطالبات». هنا تراجعينها وتنشرينها وتقيّمينها.</p>` : ""}
+  ${tab === "projects" ? `<p class="note" style="margin:0 0 14px">أعمال هذا القسم ترفعها الطالبات وحدهن من صفحة «معرض أعمال الطالبات»، وتُسجَّل على الفصل المفعَّل حالياً${SET.year ? " (" + SET.year + " — " + SET.term + ")" : ""}. هنا تراجعينها وتنشرينها وتقيّمينها.</p>` : ""}
   <div class="panel" id="fp"><h2 id="ft">إضافة إلى «${COURSES[tcourse] || "بدون مادة"} / ${CATS[tab]}»</h2><p class="note" id="fn">الأنواع المقبولة: PDF وWord وPowerPoint وJPG وPNG وWebP. الحد الأقصى ${fmtSize(MAX)}. يمكنك بدلاً من الملف كتابة رابط (فيديو أو موقع أو لعبة).</p>
   <label for="t">عنوان الملف</label><input id="t" type="text" maxlength="150">
   <label for="d">الوصف (اختياري)</label><textarea id="d" rows="3" maxlength="1000"></textarea>
@@ -398,27 +399,39 @@ async function statsPage() {
   const th = c => `<th>${c}</th>`, td = c => `<td>${c}</td>`;
   const t1 = Object.entries(g).map(([k, a]) => `<tr>${td(esc(k))}${["lessons", "worksheets", "practice"].map(c => td(a.filter(x => x.category === c).length)).join("")}${td(a.filter(x => x.category === "projects" && x.published).length + " من " + a.filter(x => x.category === "projects").length)}${td(a.reduce((s, x) => s + (x.downloads || 0), 0))}</tr>`).join("");
   const t2 = Object.entries(g).map(([k, a]) => `<tr>${td(esc(k))}${Object.keys(COURSES).map(c => td(a.filter(x => x.category === "projects" && x.course === c).length)).join("")}</tr>`).join("");
-  $("#sp1").innerHTML = `<h2>حصر الأعمال لكل فصل دراسي</h2><p class="note">الأعمال المنشورة من الإجمالي، وتشمل أعمال الطالبات المرسلة.</p>
+  $("#sp1").innerHTML = `<div class="row" style="justify-content:space-between"><h2 style="margin:0">حصر الأعمال لكل فصل دراسي</h2><button class="btn acc" id="xl" type="button">تنزيل الإحصاءات (Excel)</button></div><p class="note">الأعمال المنشورة من الإجمالي، وتشمل أعمال الطالبات المرسلة.</p>
   <div class="tw"><table><thead><tr>${th("الفصل الدراسي")}${th("الدروس")}${th("أوراق العمل")}${th("التدريبات")}${th("أعمال الطالبات (منشور من الإجمالي)")}${th("مرات التنزيل والفتح")}</tr></thead><tbody>${t1 || '<tr><td colspan="6">لا توجد بيانات.</td></tr>'}</tbody></table></div>
   <h2 style="margin-top:26px">أعمال الطالبات حسب المادة</h2>
   <div class="tw"><table><thead><tr>${th("الفصل الدراسي")}${Object.values(COURSES).map(th).join("")}</tr></thead><tbody>${t2 || '<tr><td colspan="5">لا توجد بيانات.</td></tr>'}</tbody></table></div>`;
+  $("#xl").onclick = () => {
+    if (typeof XLSX === "undefined") return toast("تعذّر تحميل مكتبة Excel. تحققي من الاتصال بالإنترنت وأعيدي تحميل الصفحة.", false);
+    const n = (a, f) => a.filter(f).length, courses = Object.entries(COURSES);
+    const a1 = [["الفصل الدراسي", "الدروس", "أوراق العمل", "التدريبات الإلكترونية", "أعمال الطالبات المنشورة", "أعمال الطالبات (الإجمالي)", "مرات التنزيل والفتح"],
+      ...Object.entries(g).map(([k, a]) => [k, n(a, x => x.category === "lessons"), n(a, x => x.category === "worksheets"), n(a, x => x.category === "practice"), n(a, x => x.category === "projects" && x.published), n(a, x => x.category === "projects"), a.reduce((t, x) => t + (x.downloads || 0), 0)])];
+    const a2 = [["الفصل الدراسي", ...courses.map(([, v]) => v), "المجموع"],
+      ...Object.entries(g).map(([k, a]) => [k, ...courses.map(([c]) => n(a, x => x.category === "projects" && x.course === c)), n(a, x => x.category === "projects")])];
+    const wb = XLSX.utils.book_new(); wb.Workbook = { Views: [{ RTL: true }] };
+    [["حصر الفصول", a1], ["أعمال الطالبات حسب المادة", a2]].forEach(([nm, aoa]) => { const ws = XLSX.utils.aoa_to_sheet(aoa); ws["!cols"] = aoa[0].map((_, i) => ({ wch: i ? 18 : 30 })); XLSX.utils.book_append_sheet(wb, ws, nm); });
+    XLSX.writeFile(wb, "إحصاءات-بوابة-تقن-" + new Date().toISOString().slice(0, 10) + ".xlsx"); toast("تم تنزيل ملف الإحصاءات");
+  };
 }
 
 /* ===== الإعدادات وكشف الطالبات ===== */
 async function settingsPage() {
   $("#app").innerHTML = `<h2 style="margin-top:0">لوحة تحكم المعلمة</h2>${dashNav("settings")}
-  <div class="panel"><h2>السنة الدراسية والفصل</h2><p class="note">كل عمل جديد (من الطالبات أو منك) يُسجَّل تلقائياً على الفصل المحدد هنا، ويظهر في المعرض ضمن هذا الفصل. غيّريه عند بدء فصل جديد.</p>
-  <label for="sy">السنة الدراسية</label><input id="sy" type="text" dir="ltr" style="text-align:right" placeholder="2026-2027م">
-  <label for="stm">الفصل</label><select id="stm">${TERMS.map(t => `<option>${t}</option>`).join("")}</select>
+  <div class="panel"><h2>السنة الدراسية والفصل</h2><p class="note">كل عمل ترفعه الطالبات يُسجَّل تلقائياً على السنة الدراسية والفصل المفعَّلين هنا، ويظهر في المعرض ضمن هذا الفصل. غيّريه عند بدء فصل جديد.</p>
+  <p class="note" id="act" style="font-weight:700;color:var(--ink)"></p>
+  <label for="sper">السنة الدراسية والفصل المفعَّلان</label><select id="sper">${PERIODS.map(p => `<option value="${p.v}">${p.label}</option>`).join("")}</select>
   <div class="row" style="margin-top:14px"><button class="btn acc" id="ssv">حفظ</button></div></div>
   <div class="panel"><h2>كشف الصفوف وأسماء الطالبات</h2>
   <p class="note">ارفعي ملف Excel (xlsx) فيه ثلاثة أعمدة بعناوين: <b>الشعبة</b> و<b>الاسم</b> و<b>الرقم الأكاديمي</b>. بعد رفعه تختار الطالبة شعبتها من قائمة، ولا يُقبل عملها إلا إذا طابقت بياناتها الكشف. وما دام الكشف فارغاً لا يُطبَّق التحقق.</p>
   <p id="rs" class="note"></p>
   <div id="dz" class="drop" tabindex="0" role="button">اسحبي ملف Excel وأفلتيه هنا، أو اضغطي لاختياره من جهازك</div><input id="rf" type="file" accept=".xlsx,.xls,.csv" class="hide"><div id="rp"></div>
   <div class="row" style="margin-top:14px"><button class="btn bad hide" id="rdel">حذف الكشف كاملاً</button></div></div>`;
-  $("#sy").value = SET.year || ""; if (SET.term) $("#stm").value = SET.term;
-  $("#ssv").onclick = async () => { const y = $("#sy").value.trim(), t = $("#stm").value; if (!y) return toast("يرجى كتابة السنة الدراسية.", false);
-    const { data, error } = await sb.from("settings").update({ year: y, term: t }).eq("id", 1).select(); if (error || !data || !data.length) return toast("تعذّر حفظ الإعدادات.", false); SET = { year: y, term: t }; toast("تم حفظ السنة الدراسية والفصل"); };
+  const shw = () => { $("#act").textContent = SET.year ? "المفعَّل حالياً: السنة الدراسية " + SET.year + " — " + SET.term : "لم يُحدَّد فصل دراسي بعد."; };
+  if (SET.year && PERIODS.some(p => p.v === SET.year + "|" + SET.term)) $("#sper").value = SET.year + "|" + SET.term; shw();
+  $("#ssv").onclick = async () => { const [y, t] = $("#sper").value.split("|");
+    const { data, error } = await sb.from("settings").update({ year: y, term: t }).eq("id", 1).select(); if (error || !data || !data.length) return toast("تعذّر حفظ الإعدادات.", false); SET = { year: y, term: t }; shw(); toast("تم تفعيل: السنة الدراسية " + y + " — " + t); };
   const refresh = async () => { const { count } = await sb.from("students").select("*", { count: "exact", head: true }); const { data: s } = await sb.rpc("list_sections");
     $("#rs").textContent = count ? `الكشف الحالي: ${count} طالبة في ${(s || []).length} شعبة.` : "لا يوجد كشف مرفوع بعد، ولذلك يُقبل أي اسم ورقم من الطالبات."; $("#rdel").classList.toggle("hide", !count); };
   refresh();
