@@ -306,12 +306,12 @@ function dashboard() {
   $("#app").innerHTML = `<h2 style="margin-top:0">لوحة تحكم المعلمة</h2>${dashNav("files")}
   <nav class="chips" id="ctabs" aria-label="المواد">${[...Object.entries(COURSES), ["none", "بدون مادة"]].map(([k, v]) => `<a class="chip${k === "none" ? " hide" : ""}" id="ct-${k}" href="#/teacher/files/${k}/${tab}" aria-pressed="${k === tcourse}">${v}</a>`).join("")}</nav>
   <nav class="chips" id="tabs" aria-label="أقسام الملفات">${Object.entries(CATS).map(([k, v]) => `<a class="chip" id="tab-${k}" href="#/teacher/files/${tcourse}/${k}" aria-pressed="${k === tab}">${v}</a>`).join("")}</nav>
-  ${tab === "projects" ? `<div class="row" style="margin-bottom:14px"><button class="btn acc" id="addbtn" type="button">إضافة ملف</button></div>` : ""}
+  ${tab === "projects" ? `<p class="note" style="margin:0 0 14px">أعمال هذا القسم ترفعها الطالبات وحدهن من صفحة «معرض أعمال الطالبات». هنا تراجعينها وتنشرينها وتقيّمينها.</p>` : ""}
   <div class="panel" id="fp"><h2 id="ft">إضافة إلى «${COURSES[tcourse] || "بدون مادة"} / ${CATS[tab]}»</h2><p class="note" id="fn">الأنواع المقبولة: PDF وWord وPowerPoint وJPG وPNG وWebP. الحد الأقصى ${fmtSize(MAX)}. يمكنك بدلاً من الملف كتابة رابط (فيديو أو موقع أو لعبة).</p>
   <label for="t">عنوان الملف</label><input id="t" type="text" maxlength="150">
   <label for="d">الوصف (اختياري)</label><textarea id="d" rows="3" maxlength="1000"></textarea>
   <label for="co">المادة</label><select id="co"><option value="">— اختاري المادة —</option>${Object.entries(COURSES).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select>
-  <label for="c">التصنيف</label><select id="c">${Object.entries(CATS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select>
+  <label for="c">التصنيف</label><select id="c">${Object.entries(CATS).filter(([k]) => k !== "projects" || (editing && editing.category === "projects")).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select>
   <label for="f" id="fl">الملف</label><input id="f" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.webp">
   <label for="lk">أو رابط (اختياري)</label><input id="lk" type="url" dir="ltr" placeholder="https://">
   <div class="bar hide" id="bar"><i></i></div><p class="note hide" id="pct"></p>
@@ -320,7 +320,6 @@ function dashboard() {
   $("#sd").onclick = () => save(false); $("#sp").onclick = () => save(true); $("#cx").onclick = () => { editing = null; dashboard(); };
   $("#c").value = tab; $("#co").value = COURSES[tcourse] ? tcourse : "";
   if (tab === "projects" && !editing) $("#fp").classList.add("hide");
-  if ($("#addbtn")) { $("#addbtn").onclick = () => { $("#fp").classList.remove("hide"); $("#addbtn").classList.add("hide"); $("#t").focus(); }; if (editing) $("#addbtn").classList.add("hide"); }
   if (editing) { $("#ft").textContent = "تعديل الملف"; $("#t").value = editing.title; $("#d").value = editing.description || ""; $("#c").value = editing.category; $("#co").value = editing.course || ""; $("#lk").value = editing.link_url || ""; $("#fl").textContent = "استبدال الملف (اتركيه فارغاً للإبقاء على الملف الحالي)"; $("#cx").classList.remove("hide"); }
   list();
 }
@@ -332,6 +331,7 @@ async function save(publish) {
   const title = $("#t").value.trim(), file = $("#f").files[0], link = $("#lk").value.trim();
   if (!title) return toast("يرجى كتابة عنوان الملف.", false);
   if (!$("#co").value) return toast("يرجى اختيار المادة.", false);
+  if (!editing && $("#c").value === "projects") return toast("أعمال الطالبات ترفعها الطالبات فقط من صفحة المعرض.", false);
   if (link && !/^https:\/\/[^\s]+$/i.test(link)) return toast("الرابط يجب أن يبدأ بـ https://", false);
   if (!editing && !file && !link) return toast("يرجى اختيار ملف للرفع أو كتابة رابط.", false);
   if (file) { const v = validate(file); if (v) return toast(v, false); }
